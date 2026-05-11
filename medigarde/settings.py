@@ -1,13 +1,14 @@
 from pathlib import Path
 from datetime import timedelta
+import os
+import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # ─── Sécurité ─────────────────────────────────────────────────────────────────
-# En production, charger depuis les variables d'environnement (.env)
-SECRET_KEY = 'django-insecure-qmp&ds!xzux!)za&2nv3(s7(*+e4n=)1zg(eozyv1_jm6^xzl@'
-DEBUG = True
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-qmp&ds!xzux!)za&2nv3(s7(*+e4n=)1zg(eozyv1_jm6^xzl@')
+DEBUG = os.environ.get('DEBUG', 'True') == 'True'
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
 # ─── Applications ─────────────────────────────────────────────────────────────
 INSTALLED_APPS = [
@@ -36,6 +37,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',  # doit être en premier
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -63,18 +65,23 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'medigarde.wsgi.application'
 
-# ─── Base de données (PostgreSQL) ─────────────────────────────────────────────
-# Configurer DB_NAME, DB_USER, DB_PASSWORD dans les variables d'environnement
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'medigarde_db',
-        'USER': 'postgres',
-        'PASSWORD': 'postgres',
-        'HOST': 'localhost',
-        'PORT': '5432',
+# ─── Base de données ──────────────────────────────────────────────────────────
+# En prod (Railway) : DATABASE_URL est injectée automatiquement
+# En dev local      : utilise les valeurs par défaut ci-dessous
+DATABASE_URL = os.environ.get('DATABASE_URL')
+if DATABASE_URL:
+    DATABASES = {'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600)}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('DB_NAME', 'medigarde_db'),
+            'USER': os.environ.get('DB_USER', 'postgres'),
+            'PASSWORD': os.environ.get('DB_PASSWORD', 'postgres'),
+            'HOST': os.environ.get('DB_HOST', 'localhost'),
+            'PORT': os.environ.get('DB_PORT', '5432'),
+        }
     }
-}
 
 # ─── Modèle utilisateur personnalisé ──────────────────────────────────────────
 AUTH_USER_MODEL = 'accounts.User'
@@ -100,8 +107,10 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
-# ─── CORS (autoriser Angular en dev) ──────────────────────────────────────────
-CORS_ALLOWED_ORIGINS = [
+# ─── CORS ─────────────────────────────────────────────────────────────────────
+# Ajouter l'URL du front Angular déployé dans CORS_ALLOWED_ORIGINS_ENV
+_cors_env = os.environ.get('CORS_ALLOWED_ORIGINS', '')
+CORS_ALLOWED_ORIGINS = [o for o in _cors_env.split(',') if o] or [
     'http://localhost:4200',
 ]
 
@@ -120,4 +129,7 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
