@@ -10,8 +10,8 @@ class User(AbstractUser):
     ]
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='client')
     telephone = models.CharField(max_length=20, blank=True)
+    email = models.EmailField(unique=True)
 
-    # On utilise l'email comme identifiant de connexion
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
 
