@@ -1,5 +1,9 @@
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import CategorieViewSet, MedicamentViewSet
 
-urlpatterns = [
-    # Les endpoints seront ajoutés lors du développement de l'API
-]
+router = DefaultRouter()
+router.register('categories', CategorieViewSet, basename='categorie')
+router.register('', MedicamentViewSet, basename='medicament')
+
+urlpatterns = [path('', include(router.urls))]

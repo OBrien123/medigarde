@@ -1,5 +1,6 @@
 from django.urls import path
+from .views import HistoriqueRechercheListView
 
 urlpatterns = [
-    # Les endpoints seront ajoutés lors du développement de l'API
+    path('history/', HistoriqueRechercheListView.as_view(), name='historique-recherche'),
 ]
