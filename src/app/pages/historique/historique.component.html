@@ -1,0 +1,60 @@
+<div class="profile-layout">
+  <!-- Sidebar profil -->
+  <aside class="profile-sidebar card">
+    <div class="avatar-lg">{{ user?.first_name?.[0] }}{{ user?.last_name?.[0] }}</div>
+    <h2>{{ user?.first_name }} {{ user?.last_name }}</h2>
+    <p class="text-muted">{{ user?.email }}</p>
+    <nav class="profile-nav">
+      <a routerLink="/historique" class="profile-nav__item active">🕓 Historique</a>
+      <a routerLink="/alertes" class="profile-nav__item">🔔 Mes alertes</a>
+    </nav>
+    <button class="btn btn--ghost btn--sm" (click)="logout()">Déconnexion</button>
+  </aside>
+
+  <!-- Contenu -->
+  <main class="profile-content">
+    <div class="page-header">
+      <h1>Historique de recherches</h1>
+      @if (history.length > 0) {
+        <span class="text-muted">{{ history.length }} recherche(s)</span>
+      }
+    </div>
+
+    @if (loading) {
+      <div class="loading-state"><div class="spinner"></div></div>
+    } @else if (history.length === 0) {
+      <div class="empty-state card">
+        <span>🔍</span>
+        <h3>Aucun historique</h3>
+        <p class="text-muted">Vos recherches apparaîtront ici.</p>
+        <a routerLink="/recherche" class="btn btn--primary">Faire une recherche</a>
+      </div>
+    } @else {
+      @for (group of grouped; track group.date) {
+        <div class="history-group">
+          <div class="history-group__label">{{ group.date | titlecase }}</div>
+          @for (r of group.items; track r.id) {
+            <div class="history-card card">
+              <div class="history-card__body">
+                <div class="history-icon">🔍</div>
+                <div class="history-info">
+                  <span class="history-name">{{ r.medicament_nom }}</span>
+                  <span class="text-muted history-meta">
+                    {{ r.date | date:'HH:mm' }}
+                    @if (r.resultats_count !== undefined) {
+                      · {{ r.resultats_count }} résultat(s)
+                    }
+                  </span>
+                </div>
+              </div>
+              <div class="history-card__actions">
+                <button class="btn btn--outline btn--sm" (click)="relancer(r)">↺ Relancer</button>
+                <button class="btn btn--ghost btn--sm" (click)="delete(r.id)">🗑️</button>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    }
+  </main>
+</div>

@@ -1,0 +1,97 @@
+<nav class="navbar">
+  <div class="navbar__brand">
+    <span class="brand-icon">💊</span>
+    <span class="brand-name">PharmaLoc</span>
+  </div>
+  <div class="navbar__actions">
+    @if (isLoggedIn) {
+      <button class="btn btn--outline btn--sm" (click)="goToDashboard()">Mon espace</button>
+    } @else {
+      <button class="btn btn--ghost btn--sm" (click)="goToLogin()">Connexion</button>
+      <button class="btn btn--primary btn--sm" (click)="goToRegister()">S'inscrire</button>
+    }
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero__content">
+    <div class="hero__badge">Disponible au Sénégal</div>
+    <h1 class="hero__title">
+      Trouvez vos médicaments<br>
+      <span class="text-accent">en temps réel</span>
+    </h1>
+    <p class="hero__subtitle">
+      Localisez instantanément les pharmacies qui disposent du médicament dont vous avez besoin, près de chez vous.
+    </p>
+    <div class="hero__search">
+      <div class="search-bar">
+        <span class="search-bar__icon">🔍</span>
+        <input
+          type="text"
+          [(ngModel)]="searchQuery"
+          placeholder="Nom du médicament (ex: Paracétamol, Amoxicilline…)"
+          (keyup.enter)="search()"
+          class="search-bar__input"
+        />
+        <button class="btn btn--primary" (click)="search()">Rechercher</button>
+      </div>
+    </div>
+    <div class="hero__stats">
+      <div class="stat">
+        <span class="stat__value text-accent">250+</span>
+        <span class="stat__label">Pharmacies</span>
+      </div>
+      <div class="stat">
+        <span class="stat__value text-accent">1 200+</span>
+        <span class="stat__label">Médicaments</span>
+      </div>
+      <div class="stat">
+        <span class="stat__value text-accent">Temps réel</span>
+        <span class="stat__label">Disponibilité</span>
+      </div>
+    </div>
+  </div>
+  <div class="hero__map" id="landing-map"></div>
+</section>
+
+<section class="steps">
+  <div class="steps__container">
+    <h2 class="section-title">Comment ça marche ?</h2>
+    <div class="steps__grid">
+      <div class="step">
+        <div class="step__number">1</div>
+        <div class="step__icon">🔍</div>
+        <h3>Cherchez</h3>
+        <p>Entrez le nom du médicament dont vous avez besoin</p>
+      </div>
+      <div class="step__arrow">→</div>
+      <div class="step">
+        <div class="step__number">2</div>
+        <div class="step__icon">📍</div>
+        <h3>Localisez</h3>
+        <p>Voyez les pharmacies à proximité avec le stock disponible</p>
+      </div>
+      <div class="step__arrow">→</div>
+      <div class="step">
+        <div class="step__number">3</div>
+        <div class="step__icon">🏃</div>
+        <h3>Récupérez</h3>
+        <p>Rendez-vous directement à la pharmacie la plus proche</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="cta">
+  <div class="cta__card card">
+    <h2>Vous êtes pharmacien ?</h2>
+    <p>Gérez votre stock en ligne et rendez vos médicaments visibles à tous vos patients.</p>
+    <button class="btn btn--primary btn--lg" (click)="goToRegister()">
+      Inscrire ma pharmacie
+    </button>
+  </div>
+</section>
+
+<footer class="footer">
+  <span>© 2025 PharmaLoc – Groupe G7 · ESP Dakar</span>
+</footer>

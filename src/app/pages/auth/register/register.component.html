@@ -1,0 +1,189 @@
+<div class="register-layout">
+  <div class="register-layout__header">
+    <a routerLink="/" class="brand">
+      <span>💊</span>
+      <span class="brand-name">PharmaLoc</span>
+    </a>
+    <div class="step-indicator">
+      @for (s of [1,2,3]; track s) {
+        <div class="step-dot" [class.active]="step >= s" [class.current]="step === s">{{ s }}</div>
+        @if (s < 3) { <div class="step-line" [class.active]="step > s"></div> }
+      }
+    </div>
+  </div>
+
+  <div class="register-layout__body">
+
+    <!-- Étape 1 : Choix du type -->
+    @if (step === 1) {
+      <div class="register-card card">
+        <h1>Créer un compte</h1>
+        <p class="text-muted">Quel type de compte souhaitez-vous créer ?</p>
+        <div class="type-grid">
+          <button class="type-card" (click)="selectType('client')">
+            <span class="type-icon">👤</span>
+            <h3>Patient</h3>
+            <p>Recherchez des médicaments et gérez vos alertes</p>
+            <span class="btn btn--outline btn--sm">Choisir →</span>
+          </button>
+          <button class="type-card" (click)="selectType('pharmacie')">
+            <span class="type-icon">🏥</span>
+            <h3>Pharmacie</h3>
+            <p>Gérez votre stock et soyez visible pour les patients</p>
+            <span class="btn btn--outline btn--sm">Choisir →</span>
+          </button>
+        </div>
+        <div class="auth-footer">
+          <span class="text-muted">Déjà inscrit ?</span>
+          <a routerLink="/connexion" class="text-accent">Se connecter</a>
+        </div>
+      </div>
+    }
+
+    <!-- Étape 2 : Informations -->
+    @if (step === 2) {
+      <div class="register-card card">
+        <button class="back-btn" (click)="back()">← Retour</button>
+        <h2>{{ userType === 'client' ? 'Informations personnelles' : 'Informations de la pharmacie' }}</h2>
+
+        @if (error) { <div class="alert alert--error">{{ error }}</div> }
+
+        @if (userType === 'client') {
+          <form [formGroup]="clientForm" (ngSubmit)="nextStep()" class="auth-form">
+            <div class="form-row">
+              <div class="input-group">
+                <label>Prénom *</label>
+                <input type="text" formControlName="first_name" placeholder="Jean" />
+              </div>
+              <div class="input-group">
+                <label>Nom *</label>
+                <input type="text" formControlName="last_name" placeholder="Diallo" />
+              </div>
+            </div>
+            <div class="input-group">
+              <label>Email *</label>
+              <input type="email" formControlName="email" placeholder="jean&#64;email.com" />
+            </div>
+            <div class="input-group">
+              <label>Téléphone</label>
+              <input type="tel" formControlName="telephone" placeholder="+221 77 000 0000" />
+            </div>
+            <div class="input-group">
+              <label>Ville</label>
+              <input type="text" formControlName="ville" placeholder="Dakar" />
+            </div>
+            <div class="form-row">
+              <div class="input-group">
+                <label>Mot de passe *</label>
+                <input type="password" formControlName="password" placeholder="Min. 8 caractères" />
+                @if (clientForm.get('password')?.value) {
+                  <div class="pwd-hint {{ pwdStrength(clientForm.get('password')?.value) }}">
+                    {{ pwdStrengthLabel(clientForm.get('password')?.value) }}
+                  </div>
+                }
+              </div>
+              <div class="input-group">
+                <label>Confirmation *</label>
+                <input type="password" formControlName="password2" placeholder="••••••••" />
+              </div>
+            </div>
+            <div class="pwd-rules">
+              Le mot de passe doit avoir <strong>8+ caractères</strong>, ne pas être uniquement numérique, et ne pas être trop courant.
+            </div>
+            <button type="submit" class="btn btn--primary w-full" [disabled]="clientForm.invalid">
+              Continuer →
+            </button>
+          </form>
+        }
+
+        @if (userType === 'pharmacie') {
+          <form [formGroup]="pharmacieForm" (ngSubmit)="nextStep()" class="auth-form">
+            <div class="input-group">
+              <label>Nom de la pharmacie *</label>
+              <input type="text" formControlName="nom" placeholder="Pharmacie Centrale" />
+            </div>
+            <div class="input-group">
+              <label>Adresse *</label>
+              <input type="text" formControlName="adresse" placeholder="Avenue Cheikh Anta Diop" />
+            </div>
+            <div class="form-row">
+              <div class="input-group">
+                <label>Ville *</label>
+                <input type="text" formControlName="ville" placeholder="Dakar" />
+              </div>
+              <div class="input-group">
+                <label>Téléphone *</label>
+                <input type="tel" formControlName="telephone" placeholder="+221 33 000 0000" />
+              </div>
+            </div>
+            <div class="input-group">
+              <label>Email *</label>
+              <input type="email" formControlName="email" placeholder="pharmacie&#64;email.com" />
+            </div>
+            <div class="form-row">
+              <div class="input-group">
+                <label>NINEA *</label>
+                <input type="text" formControlName="ninea" placeholder="123456789" />
+              </div>
+              <div class="input-group">
+                <label>Numéro de licence *</label>
+                <input type="text" formControlName="licence" placeholder="LIC-2024-001" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="input-group">
+                <label>Mot de passe *</label>
+                <input type="password" formControlName="password" placeholder="••••••••" />
+              </div>
+              <div class="input-group">
+                <label>Confirmation *</label>
+                <input type="password" formControlName="password2" placeholder="••••••••" />
+              </div>
+            </div>
+            <button type="submit" class="btn btn--primary w-full" [disabled]="pharmacieForm.invalid">
+              Continuer →
+            </button>
+          </form>
+        }
+      </div>
+    }
+
+    <!-- Étape 3 : Confirmation -->
+    @if (step === 3) {
+      <div class="register-card card confirm-card">
+        <button class="back-btn" (click)="back()">← Retour</button>
+        <h2>Confirmation</h2>
+        <p class="text-muted">Vérifiez vos informations avant de valider.</p>
+        @if (error) { <div class="alert alert--error">{{ error }}</div> }
+        <div class="confirm-summary">
+          <p>Type : <strong>{{ userType === 'client' ? 'Patient' : 'Pharmacie' }}</strong></p>
+          @if (userType === 'client') {
+            <p>Nom : <strong>{{ clientForm.value.first_name }} {{ clientForm.value.last_name }}</strong></p>
+            <p>Email : <strong>{{ clientForm.value.email }}</strong></p>
+          }
+          @if (userType === 'pharmacie') {
+            <p>Pharmacie : <strong>{{ pharmacieForm.value.nom }}</strong></p>
+            <p>Email : <strong>{{ pharmacieForm.value.email }}</strong></p>
+            <p class="text-warning">⚠️ Votre compte sera activé après validation par un administrateur.</p>
+          }
+        </div>
+        <button class="btn btn--primary w-full" (click)="submit()" [disabled]="loading">
+          @if (loading) { <span class="spinner-sm"></span> }
+          Créer mon compte
+        </button>
+      </div>
+    }
+
+    <!-- Étape 4 : En attente (pharmacie) -->
+    @if (step === 4) {
+      <div class="register-card card success-card">
+        <div class="success-icon">✅</div>
+        <h2>Inscription envoyée !</h2>
+        <p class="text-muted">
+          Votre demande d'inscription a été envoyée. Un administrateur examinera votre dossier et vous notifiera par email une fois votre compte activé.
+        </p>
+        <a routerLink="/" class="btn btn--primary">Retour à l'accueil</a>
+      </div>
+    }
+  </div>
+</div>

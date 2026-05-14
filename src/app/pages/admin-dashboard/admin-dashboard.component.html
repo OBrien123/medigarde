@@ -1,0 +1,192 @@
+<div class="dashboard-layout">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar__brand">💊 <span>PharmaLoc</span></div>
+    <nav class="sidebar__nav">
+      <button class="nav-item" [class.active]="activeNav === 'dashboard'" (click)="activeNav = 'dashboard'">
+        <span>📊</span> Tableau de bord
+      </button>
+      <button class="nav-item" [class.active]="activeNav === 'pharmacies'" (click)="activeNav = 'pharmacies'">
+        <span>🏥</span> Pharmacies
+      </button>
+      <button class="nav-item" [class.active]="activeNav === 'pending'" (click)="activeNav = 'pending'">
+        <span>⏳</span> En attente
+        @if (stats.enAttente > 0) {
+          <span class="badge-count">{{ stats.enAttente }}</span>
+        }
+      </button>
+    </nav>
+    <div class="sidebar__footer">
+      <div class="user-info">
+        <div class="avatar">{{ user?.first_name?.[0] }}{{ user?.last_name?.[0] }}</div>
+        <div>
+          <div class="user-name">{{ user?.first_name }} {{ user?.last_name }}</div>
+          <div class="user-role text-muted">Administrateur</div>
+        </div>
+      </div>
+      <button class="btn btn--ghost btn--sm" (click)="logout()">Déconnexion</button>
+    </div>
+  </aside>
+
+  <!-- Contenu -->
+  <main class="main-content">
+    @if (loading) { <div class="page-center"><div class="spinner"></div></div> }
+
+    <!-- Dashboard -->
+    @if (!loading && activeNav === 'dashboard') {
+      <div class="content-section">
+        <div class="page-header"><h1>Tableau de bord</h1></div>
+
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-icon">🏥</div>
+            <div class="stat-value">{{ stats.total }}</div>
+            <div class="stat-label text-muted">Total pharmacies</div>
+          </div>
+          <div class="stat-card stat-card--success">
+            <div class="stat-icon">✅</div>
+            <div class="stat-value text-accent">{{ stats.active }}</div>
+            <div class="stat-label text-muted">Actives</div>
+          </div>
+          <div class="stat-card stat-card--warning">
+            <div class="stat-icon">⏳</div>
+            <div class="stat-value text-warning">{{ stats.enAttente }}</div>
+            <div class="stat-label text-muted">En attente</div>
+          </div>
+          <div class="stat-card stat-card--danger">
+            <div class="stat-icon">🚫</div>
+            <div class="stat-value text-danger">{{ stats.suspendu }}</div>
+            <div class="stat-label text-muted">Suspendues</div>
+          </div>
+        </div>
+
+        <!-- Graphe statut (barres CSS) -->
+        <div class="card chart-card">
+          <h2>Répartition des pharmacies</h2>
+          <div class="chart-bars">
+            <div class="chart-bar-group">
+              <div class="chart-bar-wrap">
+                <div class="chart-bar chart-bar--success" [style.height.%]="stats.total ? (stats.active / stats.total * 100) : 0"></div>
+              </div>
+              <span>Actives</span>
+              <strong class="text-accent">{{ stats.active }}</strong>
+            </div>
+            <div class="chart-bar-group">
+              <div class="chart-bar-wrap">
+                <div class="chart-bar chart-bar--warning" [style.height.%]="stats.total ? (stats.enAttente / stats.total * 100) : 0"></div>
+              </div>
+              <span>En attente</span>
+              <strong class="text-warning">{{ stats.enAttente }}</strong>
+            </div>
+            <div class="chart-bar-group">
+              <div class="chart-bar-wrap">
+                <div class="chart-bar chart-bar--danger" [style.height.%]="stats.total ? (stats.suspendu / stats.total * 100) : 0"></div>
+              </div>
+              <span>Suspendues</span>
+              <strong class="text-danger">{{ stats.suspendu }}</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pharmacies en attente -->
+        @if (pending.length > 0) {
+          <div class="card">
+            <div class="table-header">
+              <h2>Pharmacies en attente de validation</h2>
+              <button class="btn btn--outline btn--sm" (click)="activeNav = 'pending'">Voir toutes</button>
+            </div>
+            <table class="data-table">
+              <thead><tr><th>Pharmacie</th><th>Ville</th><th>Email</th><th>Actions</th></tr></thead>
+              <tbody>
+                @for (p of pending.slice(0, 5); track p.user_id) {
+                  <tr>
+                    <td><strong>{{ p.nom }}</strong></td>
+                    <td class="text-muted">{{ p.ville }}</td>
+                    <td class="text-muted">{{ p.email }}</td>
+                    <td>
+                      <div class="action-btns">
+                        <button class="btn btn--primary btn--sm" (click)="valider(p)">✓ Valider</button>
+                        <button class="btn btn--danger btn--sm" (click)="suspendre(p)">✕ Rejeter</button>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Toutes les pharmacies -->
+    @if (!loading && activeNav === 'pharmacies') {
+      <div class="content-section">
+        <div class="page-header"><h1>Pharmacies</h1></div>
+        <div class="card">
+          <table class="data-table">
+            <thead>
+              <tr><th>Nom</th><th>Ville</th><th>Téléphone</th><th>Statut</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+              @for (p of pharmacies; track p.user_id) {
+                <tr>
+                  <td><strong>{{ p.nom }}</strong></td>
+                  <td class="text-muted">{{ p.ville }}</td>
+                  <td class="text-muted">{{ p.telephone }}</td>
+                  <td>
+                    <span class="badge {{ p.statut === 'valide' ? 'badge--success' : p.statut === 'en_attente' ? 'badge--warning' : 'badge--danger' }}">
+                      {{ p.statut }}
+                    </span>
+                  </td>
+                  <td>
+                    <div class="action-btns">
+                      @if (p.statut === 'en_attente') {
+                        <button class="btn btn--primary btn--sm" (click)="valider(p)">✓ Valider</button>
+                      }
+                      @if (p.statut === 'valide') {
+                        <button class="btn btn--danger btn--sm" (click)="suspendre(p)">Suspendre</button>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+
+    <!-- En attente -->
+    @if (!loading && activeNav === 'pending') {
+      <div class="content-section">
+        <div class="page-header"><h1>Demandes en attente</h1></div>
+        @if (pending.length === 0) {
+          <div class="empty-state card"><span>✅</span><p>Aucune demande en attente</p></div>
+        } @else {
+          <div class="pending-grid">
+            @for (p of pending; track p.user_id) {
+              <div class="pending-card card">
+                <div class="pending-card__header">
+                  <div class="pharmacie-icon">🏥</div>
+                  <div>
+                    <h3>{{ p.nom }}</h3>
+                    <p class="text-muted">{{ p.adresse }}, {{ p.ville }}</p>
+                  </div>
+                  <span class="badge badge--warning">En attente</span>
+                </div>
+                <div class="pending-card__info">
+                  @if (p.telephone) { <span class="meta-chip">📞 {{ p.telephone }}</span> }
+                  @if (p.email)     { <span class="meta-chip">✉️ {{ p.email }}</span> }
+                </div>
+                <div class="pending-card__actions">
+                  <button class="btn btn--primary" (click)="valider(p)">✓ Valider</button>
+                  <button class="btn btn--danger" (click)="suspendre(p)">✕ Rejeter</button>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+  </main>
+</div>

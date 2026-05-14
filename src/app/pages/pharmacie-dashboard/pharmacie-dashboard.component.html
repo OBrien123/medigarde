@@ -1,0 +1,215 @@
+<div class="dashboard-layout">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar__brand">💊 <span>PharmaLoc</span></div>
+    <nav class="sidebar__nav">
+      <button class="nav-item" [class.active]="activeNav === 'dashboard'" (click)="activeNav = 'dashboard'">
+        <span>📊</span> Tableau de bord
+      </button>
+      <button class="nav-item" [class.active]="activeNav === 'stocks'" (click)="activeNav = 'stocks'">
+        <span>💊</span> Stocks
+      </button>
+      <button class="nav-item" [class.active]="activeNav === 'profile'" (click)="activeNav = 'profile'">
+        <span>⚙️</span> Ma pharmacie
+      </button>
+    </nav>
+    <div class="sidebar__footer">
+      <div class="user-info">
+        <div class="avatar">{{ user?.first_name?.[0] }}{{ user?.last_name?.[0] }}</div>
+        <div>
+          <div class="user-name">{{ user?.first_name }} {{ user?.last_name }}</div>
+          <div class="user-role text-muted">Pharmacien</div>
+        </div>
+      </div>
+      <button class="btn btn--ghost btn--sm" (click)="logout()">Déconnexion</button>
+    </div>
+  </aside>
+
+  <!-- Contenu principal -->
+  <main class="main-content">
+
+    @if (loading) {
+      <div class="page-center"><div class="spinner"></div></div>
+    }
+
+    <!-- Dashboard -->
+    @if (!loading && activeNav === 'dashboard') {
+      <div class="content-section">
+        <div class="page-header">
+          <h1>Tableau de bord</h1>
+          <p class="text-muted">{{ pharmacie?.nom }}</p>
+        </div>
+
+        <!-- KPIs -->
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-icon">📦</div>
+            <div class="kpi-value">{{ kpis.total }}</div>
+            <div class="kpi-label text-muted">Médicaments</div>
+          </div>
+          <div class="kpi-card kpi-card--success">
+            <div class="kpi-icon">✅</div>
+            <div class="kpi-value text-accent">{{ kpis.disponibles }}</div>
+            <div class="kpi-label text-muted">En stock</div>
+          </div>
+          <div class="kpi-card kpi-card--warning">
+            <div class="kpi-icon">⚠️</div>
+            <div class="kpi-value text-warning">{{ kpis.faibles }}</div>
+            <div class="kpi-label text-muted">Stock faible</div>
+          </div>
+          <div class="kpi-card kpi-card--danger">
+            <div class="kpi-icon">❌</div>
+            <div class="kpi-value text-danger">{{ kpis.ruptures }}</div>
+            <div class="kpi-label text-muted">Ruptures</div>
+          </div>
+        </div>
+
+        <!-- Alertes stocks faibles -->
+        @if (kpis.faibles > 0 || kpis.ruptures > 0) {
+          <div class="alert-banner">
+            ⚠️ {{ kpis.faibles + kpis.ruptures }} médicament(s) nécessitent votre attention.
+            <button class="btn btn--warning btn--sm" (click)="activeNav = 'stocks'">Gérer les stocks</button>
+          </div>
+        }
+
+        <!-- Tableau récapitulatif -->
+        <div class="card">
+          <div class="table-header">
+            <h2>Derniers stocks</h2>
+            <button class="btn btn--primary btn--sm" (click)="activeNav = 'stocks'">Voir tout</button>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr><th>Médicament</th><th>Quantité</th><th>Niveau</th><th>Statut</th></tr>
+            </thead>
+            <tbody>
+              @for (s of stocks.slice(0, 6); track s.id) {
+                <tr>
+                  <td>{{ s.medicament_detail?.nom_generique }} {{ s.medicament_detail?.dosage }}</td>
+                  <td>{{ s.quantite }}</td>
+                  <td class="bar-cell">
+                    <div class="progress-bar">
+                      <div class="progress-bar__fill {{ stockStatus(s) }}" [style.width.%]="stockPercent(s)"></div>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="badge {{ stockBadge(s) }}">{{ stockLabel(s) }}</span>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+
+    <!-- Stocks -->
+    @if (!loading && activeNav === 'stocks') {
+      <div class="content-section">
+        <div class="page-header">
+          <h1>Gestion des stocks</h1>
+          <button class="btn btn--primary" (click)="openAdd()">+ Ajouter un médicament</button>
+        </div>
+
+        <div class="card">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Médicament</th>
+                <th>Quantité</th>
+                <th>Seuil d'alerte</th>
+                <th>Prix (FCFA)</th>
+                <th>Niveau</th>
+                <th>Statut</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (s of stocks; track s.id) {
+                <tr>
+                  <td>{{ s.medicament_detail?.nom_generique }} {{ s.medicament_detail?.dosage }}</td>
+                  <td>{{ s.quantite }}</td>
+                  <td class="text-muted">{{ s.seuil_alerte }}</td>
+                  <td>{{ s.prix | number:'1.0-0' }}</td>
+                  <td class="bar-cell">
+                    <div class="progress-bar">
+                      <div class="progress-bar__fill {{ stockStatus(s) }}" [style.width.%]="stockPercent(s)"></div>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="badge {{ stockBadge(s) }}">{{ stockLabel(s) }}</span>
+                  </td>
+                  <td>
+                    <div class="action-btns">
+                      <button class="btn btn--ghost btn--sm" (click)="openEdit(s)">✏️</button>
+                      <button class="btn btn--danger btn--sm" (click)="deleteStock(s.id)">🗑️</button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+
+    <!-- Profil -->
+    @if (!loading && activeNav === 'profile') {
+      <div class="content-section">
+        <div class="page-header"><h1>Ma pharmacie</h1></div>
+        <div class="card profile-card">
+          <div class="profile-row"><span class="text-muted">Nom</span><strong>{{ pharmacie?.nom }}</strong></div>
+          <div class="profile-row"><span class="text-muted">Adresse</span><strong>{{ pharmacie?.adresse }}</strong></div>
+          <div class="profile-row"><span class="text-muted">Ville</span><strong>{{ pharmacie?.ville }}</strong></div>
+          <div class="profile-row"><span class="text-muted">Téléphone</span><strong>{{ pharmacie?.telephone }}</strong></div>
+          <div class="profile-row"><span class="text-muted">Email</span><strong>{{ pharmacie?.email }}</strong></div>
+          <div class="profile-row">
+            <span class="text-muted">Statut</span>
+            <span class="badge {{ pharmacie?.statut === 'valide' ? 'badge--success' : 'badge--warning' }}">
+              {{ pharmacie?.statut }}
+            </span>
+          </div>
+        </div>
+      </div>
+    }
+  </main>
+</div>
+
+<!-- Modal stock -->
+@if (showModal && editingStock) {
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>{{ editingStock['id'] ? 'Modifier le stock' : 'Ajouter un médicament' }}</h2>
+        <button class="close-btn" (click)="closeModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="input-group">
+          <label for="med-id">ID Médicament *</label>
+          <input id="med-id" type="number" [(ngModel)]="editingStock['medicament']" placeholder="ID du médicament" />
+        </div>
+        <div class="form-row">
+          <div class="input-group">
+            <label for="quantite">Quantité *</label>
+            <input id="quantite" type="number" [(ngModel)]="editingStock['quantite']" min="0" placeholder="ex: 50" />
+          </div>
+          <div class="input-group">
+            <label for="seuil">Seuil d'alerte</label>
+            <input id="seuil" type="number" [(ngModel)]="editingStock['seuil_alerte']" min="0" placeholder="ex: 10" />
+          </div>
+        </div>
+        <div class="input-group">
+          <label for="prix">Prix (FCFA) *</label>
+          <input id="prix" type="number" [(ngModel)]="editingStock['prix']" min="0" placeholder="ex: 1500" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn--ghost" (click)="closeModal()">Annuler</button>
+        <button type="button" class="btn btn--primary" (click)="saveStock()" [disabled]="saving">
+          @if (saving) { <span class="spinner-sm"></span> }
+          Enregistrer
+        </button>
+      </div>
+    </div>
+  </div>
+}

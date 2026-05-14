@@ -1,0 +1,97 @@
+<div class="recherche-layout">
+  <!-- Colonne gauche -->
+  <aside class="panel-left">
+    <div class="panel-left__header">
+      <!-- Barre de marque + utilisateur -->
+      <div class="header-top">
+        <a routerLink="/" class="brand-sm">💊 PharmaLoc</a>
+        @if (user) {
+          <div class="user-menu">
+            <div class="user-avatar">{{ user.first_name[0] }}{{ user.last_name[0] }}</div>
+            <div class="user-info">
+              <span class="user-name">{{ user.first_name }} {{ user.last_name }}</span>
+              <span class="user-role text-muted">Patient</span>
+            </div>
+            <div class="user-actions">
+              <a routerLink="/historique" class="action-link" title="Mon historique">🕓</a>
+              <a routerLink="/alertes" class="action-link" title="Mes alertes">🔔</a>
+              <button type="button" class="action-link logout-btn" (click)="logout()" title="Déconnexion">⏻</button>
+            </div>
+          </div>
+        } @else {
+          <a routerLink="/connexion" class="btn btn--outline btn--sm">Connexion</a>
+        }
+      </div>
+
+      <!-- Barre de recherche -->
+      <div class="search-bar">
+        <span>🔍</span>
+        <input
+          type="text"
+          [(ngModel)]="searchQuery"
+          placeholder="Nom du médicament…"
+          (keyup.enter)="search()"
+        />
+        <button type="button" class="btn btn--primary btn--sm" (click)="search()">Chercher</button>
+      </div>
+      <button type="button" class="btn btn--ghost btn--sm locate-btn" (click)="locateMe()">📍 Me localiser</button>
+    </div>
+
+    <div class="panel-left__results">
+      @if (loading) {
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p class="text-muted">Recherche en cours…</p>
+        </div>
+      } @else if (error) {
+        <div class="error-state"><p class="text-danger">{{ error }}</p></div>
+      } @else if (results.length === 0 && searchQuery) {
+        <div class="empty-state">
+          <span>🔍</span>
+          <p>Aucune pharmacie trouvée pour <strong>{{ searchQuery }}</strong></p>
+        </div>
+      } @else if (results.length === 0) {
+        <div class="empty-state">
+          <span>💊</span>
+          <p class="text-muted">Entrez un médicament pour trouver les pharmacies proches.</p>
+        </div>
+      } @else {
+        <div class="results-count text-muted">
+          {{ results.length }} pharmacie(s) avec <strong class="text-accent">{{ searchQuery }}</strong>
+        </div>
+        @for (p of results; track p.user_id) {
+          <div class="result-card" [class.selected]="selectedResult?.user_id === p.user_id" (click)="selectResult(p)">
+            <div class="result-card__header">
+              <div>
+                <h3 class="result-card__name">{{ p.nom }}</h3>
+                <p class="result-card__addr text-muted">{{ p.adresse }}, {{ p.ville }}</p>
+              </div>
+              <span class="badge badge--success">En stock</span>
+            </div>
+            <div class="result-card__meta">
+              @if (p.distance) {
+                <span class="meta-chip">📍 {{ formatDistance(p.distance) }}</span>
+              }
+              @if (p.telephone) {
+                <span class="meta-chip">📞 {{ p.telephone }}</span>
+              }
+            </div>
+            <a [routerLink]="['/pharmacie', p.user_id]" class="btn btn--outline btn--sm detail-btn">
+              Voir la pharmacie
+            </a>
+          </div>
+        }
+      }
+    </div>
+  </aside>
+
+  <!-- Carte -->
+  <div class="map-panel" id="results-map">
+    @if (!mapReady) {
+      <div class="map-placeholder">
+        <div class="spinner"></div>
+        <p class="text-muted">Chargement de la carte…</p>
+      </div>
+    }
+  </div>
+</div>

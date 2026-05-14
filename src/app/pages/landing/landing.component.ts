@@ -1,0 +1,81 @@
+import { Component, inject, OnInit, OnDestroy, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+import { Router } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { AuthService } from '../../core/services/auth.service';
+
+@Component({
+  selector: 'app-landing',
+  standalone: true,
+  imports: [FormsModule],
+  templateUrl: './landing.component.html',
+  styleUrl: './landing.component.scss',
+})
+export class LandingComponent implements OnInit, OnDestroy {
+  private router = inject(Router);
+  private auth = inject(AuthService);
+  private platformId = inject(PLATFORM_ID);
+
+  searchQuery = '';
+  private map: any;
+
+  ngOnInit(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      setTimeout(() => this.initMap(), 300);
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.map?.remove();
+  }
+
+  private async initMap(): Promise<void> {
+    const L = (window as any).L;
+    if (!L) return;
+
+    this.map = L.map('landing-map', { zoomControl: false, attributionControl: false }).setView([14.6937, -17.4441], 13);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      maxZoom: 19,
+    }).addTo(this.map);
+
+    const pharmacies = [
+      { lat: 14.6967, lng: -17.4461, nom: 'Pharmacie Centrale' },
+      { lat: 14.6900, lng: -17.4400, nom: 'Pharmacie du Plateau' },
+      { lat: 14.7010, lng: -17.4510, nom: 'Pharmacie Liberté' },
+    ];
+    pharmacies.forEach(p => {
+      const marker = L.circleMarker([p.lat, p.lng], {
+        radius: 8, fillColor: '#00D4A0', color: '#fff', weight: 2, fillOpacity: 1,
+      }).addTo(this.map);
+      marker.bindPopup(`<strong>${p.nom}</strong>`);
+    });
+  }
+
+  search(): void {
+    if (!this.searchQuery.trim()) return;
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        this.router.navigate(['/recherche'], {
+          queryParams: {
+            q: this.searchQuery,
+            lat: pos.coords.latitude,
+            lon: pos.coords.longitude,
+          },
+        });
+      },
+      () => {
+        this.router.navigate(['/recherche'], { queryParams: { q: this.searchQuery } });
+      }
+    );
+  }
+
+  goToRegister(): void { this.router.navigate(['/inscription']); }
+  goToLogin(): void { this.router.navigate(['/connexion']); }
+  get isLoggedIn(): boolean { return this.auth.isLoggedIn; }
+  goToDashboard(): void {
+    const role = this.auth.user?.role;
+    if (role === 'pharmacie') this.router.navigate(['/pharmacie/dashboard']);
+    else if (role === 'admin') this.router.navigate(['/admin/dashboard']);
+    else this.router.navigate(['/historique']); // espace client = historique + alertes
+  }
+}

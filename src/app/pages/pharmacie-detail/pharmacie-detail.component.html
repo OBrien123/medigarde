@@ -1,0 +1,103 @@
+@if (loading) {
+  <div class="page-center"><div class="spinner"></div></div>
+} @else if (pharmacie) {
+  <div class="detail-layout">
+    <!-- En-tête -->
+    <header class="detail-header">
+      <a routerLink="/recherche" class="back-link">← Retour aux résultats</a>
+      <div class="detail-header__info">
+        <div class="pharmacie-avatar">🏥</div>
+        <div>
+          <h1>{{ pharmacie.nom }}</h1>
+          <p class="text-muted">{{ pharmacie.adresse }}, {{ pharmacie.ville }}</p>
+          <div class="header-meta">
+            @if (pharmacie.telephone) { <span class="meta-chip">📞 {{ pharmacie.telephone }}</span> }
+            @if (pharmacie.email)     { <span class="meta-chip">✉️ {{ pharmacie.email }}</span> }
+            @if (pharmacie.rating)    { <span class="meta-chip">⭐ {{ pharmacie.rating }}/5 ({{ pharmacie.nombre_avis }} avis)</span> }
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="detail-body">
+      <!-- Médicaments disponibles -->
+      <section class="card stocks-section">
+        <h2>Médicaments disponibles</h2>
+        @if (stocks.length === 0) {
+          <p class="text-muted empty-msg">Aucun médicament en stock.</p>
+        }
+        <table class="stock-table">
+          <thead>
+            <tr>
+              <th>Médicament</th>
+              <th>Forme</th>
+              <th>Quantité</th>
+              <th>Prix</th>
+              <th>Statut</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (s of stocks; track s.id) {
+              <tr>
+                <td>{{ s.medicament_detail?.nom_generique }} {{ s.medicament_detail?.dosage }}</td>
+                <td class="text-muted">{{ s.medicament_detail?.forme_display }}</td>
+                <td>{{ s.quantite }}</td>
+                <td>{{ s.prix | number:'1.0-0' }} FCFA</td>
+                <td>
+                  <span class="badge {{ stockBadge(s) }}">{{ stockLabel(s) }}</span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </section>
+
+      <div class="detail-side">
+        <!-- Carte -->
+        <section class="card map-section">
+          <h2>Localisation</h2>
+          <div id="detail-map" class="detail-map"></div>
+        </section>
+
+        <!-- Horaires -->
+        <section class="card horaires-section">
+          <h2>Horaires d'ouverture</h2>
+          <div class="horaires-grid">
+            @for (jour of joursEntries; track jour.key) {
+              <div class="horaire-row">
+                <span class="horaire-jour">{{ jour.label }}</span>
+                @if (getHoraire(jour.key) && !getHoraire(jour.key)!.ferme) {
+                  <span class="horaire-time text-accent">{{ getHoraire(jour.key)!.heure_ouverture }} – {{ getHoraire(jour.key)!.heure_fermeture }}</span>
+                } @else {
+                  <span class="horaire-time text-danger">Fermé</span>
+                }
+              </div>
+            }
+          </div>
+        </section>
+
+        <!-- Alerte -->
+        @if (isLoggedIn) {
+          <section class="card alerte-section">
+            <h2>🔔 Activer une alerte</h2>
+            <p class="text-muted">Soyez notifié quand un médicament est disponible dans cette pharmacie.</p>
+            @if (alerteSuccess) {
+              <div class="alert-success">✅ Alerte activée avec succès !</div>
+            } @else {
+              <div class="input-group">
+                <label>Rayon de notification (mètres)</label>
+                <select [(ngModel)]="alerteRayon">
+                  <option [value]="500">500 m</option>
+                  <option [value]="1000">1 km</option>
+                  <option [value]="2000">2 km</option>
+                  <option [value]="5000">5 km</option>
+                </select>
+              </div>
+              <button class="btn btn--primary" (click)="activerAlerte()">Activer l'alerte</button>
+            }
+          </section>
+        }
+      </div>
+    </div>
+  </div>
+}

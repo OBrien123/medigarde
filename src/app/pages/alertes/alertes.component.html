@@ -1,0 +1,77 @@
+<div class="profile-layout">
+  <!-- Sidebar profil -->
+  <aside class="profile-sidebar card">
+    <div class="avatar-lg">{{ user?.first_name?.[0] }}{{ user?.last_name?.[0] }}</div>
+    <h2>{{ user?.first_name }} {{ user?.last_name }}</h2>
+    <p class="text-muted">{{ user?.email }}</p>
+    <nav class="profile-nav">
+      <a routerLink="/historique" class="profile-nav__item">🕓 Historique</a>
+      <a routerLink="/alertes" class="profile-nav__item active">🔔 Mes alertes</a>
+    </nav>
+    <button type="button" class="btn btn--ghost btn--sm" (click)="logout()">Déconnexion</button>
+  </aside>
+
+  <!-- Contenu -->
+  <main class="profile-content">
+    <div class="page-header">
+      <h1>Mes alertes</h1>
+      <span class="text-muted">{{ alertes.length }} alerte(s) configurée(s)</span>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button type="button" class="tab" [class.active]="activeTab === 'active'" (click)="activeTab = 'active'">
+        Actives <span class="tab-count">{{ countTab('active') }}</span>
+      </button>
+      <button type="button" class="tab" [class.active]="activeTab === 'notified'" (click)="activeTab = 'notified'">
+        Notifiées <span class="tab-count">{{ countTab('notified') }}</span>
+      </button>
+      <button type="button" class="tab" [class.active]="activeTab === 'paused'" (click)="activeTab = 'paused'">
+        Pausées <span class="tab-count">{{ countTab('paused') }}</span>
+      </button>
+    </div>
+
+    @if (loading) {
+      <div class="loading-state"><div class="spinner"></div></div>
+    } @else if (filtered.length === 0) {
+      <div class="empty-state card">
+        <span>🔔</span>
+        <h3>Aucune alerte</h3>
+        <p class="text-muted">Activez des alertes depuis la fiche d'une pharmacie.</p>
+        <a routerLink="/recherche" class="btn btn--primary">Chercher un médicament</a>
+      </div>
+    } @else {
+      <div class="alertes-list">
+        @for (a of filtered; track a.id) {
+          <div class="alerte-card card">
+            <div class="alerte-card__header">
+              <div class="alerte-icon">🔔</div>
+              <div class="alerte-info">
+                <span class="alerte-name">{{ a.medicament_nom ?? 'Médicament #' + a.medicament }}</span>
+                <span class="text-muted alerte-meta">Rayon : {{ rayonLabel(a.rayon) }}</span>
+                @if (a.date_notification) {
+                  <span class="text-muted alerte-meta">Notifié le {{ a.date_notification | date:'dd/MM/yyyy HH:mm' }}</span>
+                }
+              </div>
+              <div class="alerte-status">
+                @if (a.active) {
+                  <span class="badge badge--success">Active</span>
+                } @else if (a.date_notification) {
+                  <span class="badge badge--neutral">Notifiée</span>
+                } @else {
+                  <span class="badge badge--warning">Pausée</span>
+                }
+              </div>
+            </div>
+            <div class="alerte-card__actions">
+              <button class="toggle-btn" [class.on]="a.active" (click)="toggle(a)" title="{{ a.active ? 'Pause' : 'Activer' }}">
+                <span class="toggle-knob"></span>
+              </button>
+              <button class="btn btn--ghost btn--sm" (click)="delete(a.id)">🗑️</button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </main>
+</div>
