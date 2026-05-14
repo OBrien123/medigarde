@@ -39,8 +39,9 @@ class RegisterPharmacieSerializer(serializers.ModelSerializer):
     ville = serializers.CharField()
     ninea = serializers.CharField()
     licence = serializers.CharField()
-    latitude = serializers.DecimalField(max_digits=10, decimal_places=7)
-    longitude = serializers.DecimalField(max_digits=10, decimal_places=7)
+    # Coordonnées optionnelles — l'admin peut les corriger après validation
+    latitude = serializers.DecimalField(max_digits=10, decimal_places=7, required=False, default=14.6937)
+    longitude = serializers.DecimalField(max_digits=10, decimal_places=7, required=False, default=-17.4441)
 
     class Meta:
         model = User

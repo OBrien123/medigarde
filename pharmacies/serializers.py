@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import Pharmacie, Horaire, Commentaire, Discussion, Message
+from stocks.serializers import StockSerializer
 
 
 class HoraireSerializer(serializers.ModelSerializer):
@@ -20,12 +21,13 @@ class PharmacieListSerializer(serializers.ModelSerializer):
 
 class PharmacieSerializer(serializers.ModelSerializer):
     horaires = HoraireSerializer(many=True, read_only=True)
+    stocks = StockSerializer(many=True, read_only=True)
 
     class Meta:
         model = Pharmacie
         fields = ('user_id', 'nom', 'adresse', 'ville', 'ninea', 'licence',
                   'statut', 'latitude', 'longitude', 'telephone', 'email',
-                  'rating', 'nombre_avis', 'horaires')
+                  'rating', 'nombre_avis', 'horaires', 'stocks')
         read_only_fields = ('statut', 'rating', 'nombre_avis')
 
 

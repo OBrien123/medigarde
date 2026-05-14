@@ -41,6 +41,8 @@ class PharmacieViewSet(viewsets.ModelViewSet):
             return [permissions.AllowAny()]
         if self.action in ('update', 'partial_update'):
             return [permissions.IsAuthenticated(), IsOwnerOrAdmin()]
+        if self.action in ('valider', 'suspendre'):
+            return [permissions.IsAuthenticated(), IsAdmin()]
         return [permissions.IsAuthenticated(), IsAdmin()]
 
     @action(detail=False, methods=['get'], permission_classes=[permissions.AllowAny])
@@ -72,6 +74,22 @@ class PharmacieViewSet(viewsets.ModelViewSet):
         results.sort(key=lambda p: p.distance)
         serializer = PharmacieListSerializer(results, many=True)
         return Response(serializer.data)
+
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated, IsAdmin])
+    def valider(self, request, pk=None):
+        """POST /api/pharmacies/{id}/valider/ — active une pharmacie en attente."""
+        pharmacie = self.get_object()
+        pharmacie.statut = 'valide'
+        pharmacie.save()
+        return Response(PharmacieSerializer(pharmacie).data)
+
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated, IsAdmin])
+    def suspendre(self, request, pk=None):
+        """POST /api/pharmacies/{id}/suspendre/ — suspend une pharmacie."""
+        pharmacie = self.get_object()
+        pharmacie.statut = 'suspendu'
+        pharmacie.save()
+        return Response(PharmacieSerializer(pharmacie).data)
 
 
 class CommentaireViewSet(viewsets.ModelViewSet):
