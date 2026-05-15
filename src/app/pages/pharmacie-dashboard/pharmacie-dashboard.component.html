@@ -3,13 +3,13 @@
   <aside class="sidebar">
     <div class="sidebar__brand">💊 <span>PharmaLoc</span></div>
     <nav class="sidebar__nav">
-      <button class="nav-item" [class.active]="activeNav === 'dashboard'" (click)="activeNav = 'dashboard'">
+      <button type="button" class="nav-item" [class.active]="activeNav === 'dashboard'" (click)="activeNav = 'dashboard'">
         <span>📊</span> Tableau de bord
       </button>
-      <button class="nav-item" [class.active]="activeNav === 'stocks'" (click)="activeNav = 'stocks'">
+      <button type="button" class="nav-item" [class.active]="activeNav === 'stocks'" (click)="activeNav = 'stocks'">
         <span>💊</span> Stocks
       </button>
-      <button class="nav-item" [class.active]="activeNav === 'profile'" (click)="activeNav = 'profile'">
+      <button type="button" class="nav-item" [class.active]="activeNav === 'profile'" (click)="activeNav = 'profile'">
         <span>⚙️</span> Ma pharmacie
       </button>
     </nav>
@@ -21,7 +21,7 @@
           <div class="user-role text-muted">Pharmacien</div>
         </div>
       </div>
-      <button class="btn btn--ghost btn--sm" (click)="logout()">Déconnexion</button>
+      <button type="button" class="btn btn--ghost btn--sm" (click)="logout()">Déconnexion</button>
     </div>
   </aside>
 
@@ -68,7 +68,7 @@
         @if (kpis.faibles > 0 || kpis.ruptures > 0) {
           <div class="alert-banner">
             ⚠️ {{ kpis.faibles + kpis.ruptures }} médicament(s) nécessitent votre attention.
-            <button class="btn btn--warning btn--sm" (click)="activeNav = 'stocks'">Gérer les stocks</button>
+            <button type="button" class="btn btn--warning btn--sm" (click)="activeNav = 'stocks'">Gérer les stocks</button>
           </div>
         }
 
@@ -76,7 +76,7 @@
         <div class="card">
           <div class="table-header">
             <h2>Derniers stocks</h2>
-            <button class="btn btn--primary btn--sm" (click)="activeNav = 'stocks'">Voir tout</button>
+            <button type="button" class="btn btn--primary btn--sm" (click)="activeNav = 'stocks'">Voir tout</button>
           </div>
           <table class="data-table">
             <thead>
@@ -108,7 +108,7 @@
       <div class="content-section">
         <div class="page-header">
           <h1>Gestion des stocks</h1>
-          <button class="btn btn--primary" (click)="openAdd()">+ Ajouter un médicament</button>
+          <button type="button" class="btn btn--primary" (click)="openAdd()">+ Ajouter un médicament</button>
         </div>
 
         <div class="card">
@@ -141,8 +141,8 @@
                   </td>
                   <td>
                     <div class="action-btns">
-                      <button class="btn btn--ghost btn--sm" (click)="openEdit(s)">✏️</button>
-                      <button class="btn btn--danger btn--sm" (click)="deleteStock(s.id)">🗑️</button>
+                      <button type="button" class="btn btn--ghost btn--sm" (click)="openEdit(s)">✏️</button>
+                      <button type="button" class="btn btn--danger btn--sm" (click)="deleteStock(s.id)">🗑️</button>
                     </div>
                   </td>
                 </tr>
@@ -181,12 +181,17 @@
     <div class="modal card" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <h2>{{ editingStock['id'] ? 'Modifier le stock' : 'Ajouter un médicament' }}</h2>
-        <button class="close-btn" (click)="closeModal()">✕</button>
+        <button type="button" class="close-btn" (click)="closeModal()">✕</button>
       </div>
       <div class="modal-body">
         <div class="input-group">
-          <label for="med-id">ID Médicament *</label>
-          <input id="med-id" type="number" [(ngModel)]="editingStock['medicament']" placeholder="ID du médicament" />
+          <label for="med-id">Médicament *</label>
+          <select id="med-id" [(ngModel)]="editingStock['medicament']" [disabled]="!!editingStock['id']">
+            <option [value]="null" disabled>-- Choisir un médicament --</option>
+            @for (m of medicaments; track m.id) {
+              <option [value]="m.id">{{ m.nom_generique }} {{ m.dosage }}</option>
+            }
+          </select>
         </div>
         <div class="form-row">
           <div class="input-group">

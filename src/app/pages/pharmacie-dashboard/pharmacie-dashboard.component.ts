@@ -4,8 +4,9 @@ import { FormsModule } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
 import { StockService } from '../../core/services/stock.service';
 import { PharmacieService } from '../../core/services/pharmacie.service';
+import { MedicamentService } from '../../core/services/medicament.service';
 import { AuthService } from '../../core/services/auth.service';
-import { Stock, Pharmacie } from '../../core/models';
+import { Stock, Pharmacie, Medicament } from '../../core/models';
 
 type NavItem = 'dashboard' | 'stocks' | 'profile';
 
@@ -19,12 +20,14 @@ type NavItem = 'dashboard' | 'stocks' | 'profile';
 export class PharmacieDashboardComponent implements OnInit {
   private stockService = inject(StockService);
   private pharmacieService = inject(PharmacieService);
+  private medicamentService = inject(MedicamentService);
   private auth = inject(AuthService);
   private router = inject(Router);
 
   activeNav: NavItem = 'dashboard';
   pharmacie: Pharmacie | null = null;
   stocks: Stock[] = [];
+  medicaments: Medicament[] = [];
   loading = true;
 
   // Modal ajout/édition
@@ -49,7 +52,7 @@ export class PharmacieDashboardComponent implements OnInit {
   ngOnInit(): void {
     const userId = this.auth.user?.id;
     if (!userId) { this.loading = false; return; }
-    // Le PK de Pharmacie = user.id (OneToOneField primary_key)
+    this.medicamentService.list().subscribe(r => this.medicaments = r.results);
     this.pharmacieService.maPharmacie(userId).subscribe({
       next: p => {
         this.pharmacie = p;
@@ -60,6 +63,10 @@ export class PharmacieDashboardComponent implements OnInit {
       },
       error: () => { this.loading = false; }
     });
+  }
+
+  medicamentNom(med: Medicament): string {
+    return `${med.nom_generique} ${med.dosage}${med.nom_commercial ? ' (' + med.nom_commercial + ')' : ''}`;
   }
 
   stockStatus(s: Stock): 'available' | 'low' | 'out' {
