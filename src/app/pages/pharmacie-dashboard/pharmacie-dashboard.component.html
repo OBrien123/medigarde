@@ -9,7 +9,10 @@
       <button type="button" class="nav-item" [class.active]="activeNav === 'stocks'" (click)="activeNav = 'stocks'">
         <span>💊</span> Stocks
       </button>
-      <button type="button" class="nav-item" [class.active]="activeNav === 'profile'" (click)="activeNav = 'profile'">
+      <button type="button" class="nav-item" [class.active]="activeNav === 'horaires'" (click)="activeNav = 'horaires'">
+        <span>🕐</span> Horaires
+      </button>
+      <button type="button" class="nav-item" [class.active]="activeNav === 'profile'" (click)="activeNav = 'profile'; startEditProfile()">
         <span>⚙️</span> Ma pharmacie
       </button>
     </nav>
@@ -32,7 +35,7 @@
       <div class="page-center"><div class="spinner"></div></div>
     }
 
-    <!-- Dashboard -->
+    <!-- ── Dashboard ─────────────────────────────────────────────────── -->
     @if (!loading && activeNav === 'dashboard') {
       <div class="content-section">
         <div class="page-header">
@@ -40,7 +43,6 @@
           <p class="text-muted">{{ pharmacie?.nom }}</p>
         </div>
 
-        <!-- KPIs -->
         <div class="kpi-grid">
           <div class="kpi-card">
             <div class="kpi-icon">📦</div>
@@ -64,7 +66,6 @@
           </div>
         </div>
 
-        <!-- Alertes stocks faibles -->
         @if (kpis.faibles > 0 || kpis.ruptures > 0) {
           <div class="alert-banner">
             ⚠️ {{ kpis.faibles + kpis.ruptures }} médicament(s) nécessitent votre attention.
@@ -72,7 +73,6 @@
           </div>
         }
 
-        <!-- Tableau récapitulatif -->
         <div class="card">
           <div class="table-header">
             <h2>Derniers stocks</h2>
@@ -92,9 +92,7 @@
                       <div class="progress-bar__fill {{ stockStatus(s) }}" [style.width.%]="stockPercent(s)"></div>
                     </div>
                   </td>
-                  <td>
-                    <span class="badge {{ stockBadge(s) }}">{{ stockLabel(s) }}</span>
-                  </td>
+                  <td><span class="badge {{ stockBadge(s) }}">{{ stockLabel(s) }}</span></td>
                 </tr>
               }
             </tbody>
@@ -103,7 +101,7 @@
       </div>
     }
 
-    <!-- Stocks -->
+    <!-- ── Stocks ─────────────────────────────────────────────────────── -->
     @if (!loading && activeNav === 'stocks') {
       <div class="content-section">
         <div class="page-header">
@@ -115,13 +113,8 @@
           <table class="data-table">
             <thead>
               <tr>
-                <th>Médicament</th>
-                <th>Quantité</th>
-                <th>Seuil d'alerte</th>
-                <th>Prix (FCFA)</th>
-                <th>Niveau</th>
-                <th>Statut</th>
-                <th>Actions</th>
+                <th>Médicament</th><th>Quantité</th><th>Seuil</th>
+                <th>Prix (FCFA)</th><th>Niveau</th><th>Statut</th><th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -136,9 +129,7 @@
                       <div class="progress-bar__fill {{ stockStatus(s) }}" [style.width.%]="stockPercent(s)"></div>
                     </div>
                   </td>
-                  <td>
-                    <span class="badge {{ stockBadge(s) }}">{{ stockLabel(s) }}</span>
-                  </td>
+                  <td><span class="badge {{ stockBadge(s) }}">{{ stockLabel(s) }}</span></td>
                   <td>
                     <div class="action-btns">
                       <button type="button" class="btn btn--ghost btn--sm" (click)="openEdit(s)">✏️</button>
@@ -153,29 +144,119 @@
       </div>
     }
 
-    <!-- Profil -->
+    <!-- ── Horaires ───────────────────────────────────────────────────── -->
+    @if (!loading && activeNav === 'horaires') {
+      <div class="content-section">
+        <div class="page-header">
+          <h1>Horaires d'ouverture</h1>
+        </div>
+
+        @if (horairesSuccess) {
+          <div class="alert alert--success">✅ Horaires enregistrés avec succès !</div>
+        }
+
+        <div class="card horaires-card">
+          <div class="horaires-grid-edit">
+            @for (j of joursEntries; track j.key) {
+              <div class="horaire-row-edit">
+                <span class="horaire-jour">{{ j.label }}</span>
+                <label class="toggle">
+                  <input type="checkbox" [checked]="!getHoraire(j.key).ferme"
+                    (change)="getHoraire(j.key).ferme = !getHoraire(j.key).ferme" />
+                  <span class="toggle-slider"></span>
+                  <span class="toggle-label">{{ getHoraire(j.key).ferme ? 'Fermé' : 'Ouvert' }}</span>
+                </label>
+                @if (!getHoraire(j.key).ferme) {
+                  <div class="horaire-times">
+                    <input type="time" class="time-input"
+                      [value]="getHoraire(j.key).ouverture ?? '08:00'"
+                      (change)="getHoraire(j.key).ouverture = $any($event.target).value" />
+                    <span class="text-muted">–</span>
+                    <input type="time" class="time-input"
+                      [value]="getHoraire(j.key).fermeture ?? '18:00'"
+                      (change)="getHoraire(j.key).fermeture = $any($event.target).value" />
+                  </div>
+                } @else {
+                  <span class="text-danger closed-label">Fermé ce jour</span>
+                }
+              </div>
+            }
+          </div>
+
+          <div class="horaires-footer">
+            <button type="button" class="btn btn--primary" (click)="saveHoraires()" [disabled]="savingHoraires">
+              @if (savingHoraires) { <span class="spinner-sm"></span> }
+              Enregistrer les horaires
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- ── Ma pharmacie (profil) ─────────────────────────────────────── -->
     @if (!loading && activeNav === 'profile') {
       <div class="content-section">
         <div class="page-header"><h1>Ma pharmacie</h1></div>
-        <div class="card profile-card">
-          <div class="profile-row"><span class="text-muted">Nom</span><strong>{{ pharmacie?.nom }}</strong></div>
-          <div class="profile-row"><span class="text-muted">Adresse</span><strong>{{ pharmacie?.adresse }}</strong></div>
-          <div class="profile-row"><span class="text-muted">Ville</span><strong>{{ pharmacie?.ville }}</strong></div>
-          <div class="profile-row"><span class="text-muted">Téléphone</span><strong>{{ pharmacie?.telephone }}</strong></div>
-          <div class="profile-row"><span class="text-muted">Email</span><strong>{{ pharmacie?.email }}</strong></div>
-          <div class="profile-row">
-            <span class="text-muted">Statut</span>
-            <span class="badge {{ pharmacie?.statut === 'valide' ? 'badge--success' : 'badge--warning' }}">
-              {{ pharmacie?.statut }}
-            </span>
+
+        @if (profileSuccess) {
+          <div class="alert alert--success">✅ Informations mises à jour !</div>
+        }
+
+        @if (editingProfile) {
+          <div class="card profile-form">
+            <div class="input-group">
+              <label>Nom de la pharmacie</label>
+              <input type="text" [(ngModel)]="editingProfile['nom']" />
+            </div>
+            <div class="form-row">
+              <div class="input-group">
+                <label>Adresse</label>
+                <input type="text" [(ngModel)]="editingProfile['adresse']" />
+              </div>
+              <div class="input-group">
+                <label>Ville</label>
+                <input type="text" [(ngModel)]="editingProfile['ville']" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="input-group">
+                <label>Téléphone</label>
+                <input type="tel" [(ngModel)]="editingProfile['telephone']" />
+              </div>
+              <div class="input-group">
+                <label>Email</label>
+                <input type="email" [(ngModel)]="editingProfile['email']" />
+              </div>
+            </div>
+            <div class="profile-form__actions">
+              <button type="button" class="btn btn--ghost" (click)="cancelEditProfile()">Annuler</button>
+              <button type="button" class="btn btn--primary" (click)="saveProfile()" [disabled]="savingProfile">
+                @if (savingProfile) { <span class="spinner-sm"></span> }
+                Enregistrer
+              </button>
+            </div>
           </div>
-        </div>
+        } @else {
+          <div class="card profile-card">
+            <div class="profile-row"><span class="text-muted">Nom</span><strong>{{ pharmacie?.nom }}</strong></div>
+            <div class="profile-row"><span class="text-muted">Adresse</span><strong>{{ pharmacie?.adresse }}</strong></div>
+            <div class="profile-row"><span class="text-muted">Ville</span><strong>{{ pharmacie?.ville }}</strong></div>
+            <div class="profile-row"><span class="text-muted">Téléphone</span><strong>{{ pharmacie?.telephone ?? '—' }}</strong></div>
+            <div class="profile-row"><span class="text-muted">Email</span><strong>{{ pharmacie?.email }}</strong></div>
+            <div class="profile-row">
+              <span class="text-muted">Statut</span>
+              <span class="badge {{ pharmacie?.statut === 'valide' ? 'badge--success' : 'badge--warning' }}">
+                {{ pharmacie?.statut }}
+              </span>
+            </div>
+          </div>
+        }
       </div>
     }
   </main>
 </div>
 
-<!-- Modal stock -->
+<!-- ── Modal stock ─────────────────────────────────────────────────────── -->
 @if (showModal && editingStock) {
   <div class="modal-overlay" (click)="closeModal()">
     <div class="modal card" (click)="$event.stopPropagation()">

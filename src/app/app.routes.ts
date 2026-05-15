@@ -37,9 +37,17 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'profil',
+    loadComponent: () => import('./pages/profil/profil.component').then(m => m.ProfilComponent),
+    canActivate: [authGuard],
+  },
+  {
     path: 'admin/dashboard',
     loadComponent: () => import('./pages/admin-dashboard/admin-dashboard.component').then(m => m.AdminDashboardComponent),
     canActivate: [adminGuard],
   },
-  { path: '**', redirectTo: '' },
+  {
+    path: '**',
+    loadComponent: () => import('./pages/not-found/not-found.component').then(m => m.NotFoundComponent),
+  },
 ];

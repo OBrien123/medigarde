@@ -1,0 +1,78 @@
+<div class="profil-layout">
+  <aside class="sidebar-mini">
+    <div class="sidebar-mini__brand">💊 <span class="text-accent">PharmaLoc</span></div>
+    <nav class="sidebar-mini__nav">
+      <a routerLink="/historique" class="side-link">🕓 Historique</a>
+      <a routerLink="/alertes" class="side-link">🔔 Alertes</a>
+      <a routerLink="/profil" class="side-link active">👤 Mon profil</a>
+    </nav>
+    <div class="sidebar-mini__footer">
+      <button type="button" class="btn btn--ghost btn--sm" (click)="logout()">Déconnexion</button>
+    </div>
+  </aside>
+
+  <main class="profil-main">
+    <div class="profil-header">
+      <div class="profil-avatar">{{ user?.first_name?.[0] }}{{ user?.last_name?.[0] }}</div>
+      <div>
+        <h1>{{ user?.first_name }} {{ user?.last_name }}</h1>
+        <p class="text-muted">{{ user?.email }}</p>
+      </div>
+    </div>
+
+    @if (loading) {
+      <div class="page-center"><div class="spinner"></div></div>
+    } @else {
+      @if (success) {
+        <div class="alert alert--success">✅ Profil mis à jour avec succès !</div>
+      }
+      @if (error) {
+        <div class="alert alert--error">{{ error }}</div>
+      }
+
+      <div class="card profil-form">
+        <h2>Informations personnelles</h2>
+
+        <div class="form-row">
+          <div class="input-group">
+            <label for="first_name">Prénom</label>
+            <input id="first_name" type="text" [(ngModel)]="profile.first_name" placeholder="Prénom" />
+          </div>
+          <div class="input-group">
+            <label for="last_name">Nom</label>
+            <input id="last_name" type="text" [(ngModel)]="profile.last_name" placeholder="Nom" />
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label for="telephone">Téléphone</label>
+          <input id="telephone" type="tel" [(ngModel)]="profile.telephone" placeholder="+221 77 000 0000" />
+        </div>
+
+        <h2 class="section-sep">Adresse</h2>
+
+        <div class="input-group">
+          <label for="adresse">Adresse</label>
+          <input id="adresse" type="text" [(ngModel)]="profile.adresse" placeholder="Rue, numéro…" />
+        </div>
+        <div class="form-row">
+          <div class="input-group">
+            <label for="ville">Ville</label>
+            <input id="ville" type="text" [(ngModel)]="profile.ville" placeholder="Dakar" />
+          </div>
+          <div class="input-group">
+            <label for="code_postal">Code postal</label>
+            <input id="code_postal" type="text" [(ngModel)]="profile.code_postal" placeholder="12000" />
+          </div>
+        </div>
+
+        <div class="profil-form__actions">
+          <button type="button" class="btn btn--primary" (click)="save()" [disabled]="saving">
+            @if (saving) { <span class="spinner-sm"></span> }
+            Enregistrer les modifications
+          </button>
+        </div>
+      </div>
+    }
+  </main>
+</div>

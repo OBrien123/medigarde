@@ -15,6 +15,7 @@
             <div class="user-actions">
               <a routerLink="/historique" class="action-link" title="Mon historique">🕓</a>
               <a routerLink="/alertes" class="action-link" title="Mes alertes">🔔</a>
+              <a routerLink="/profil" class="action-link" title="Mon profil">👤</a>
               <button type="button" class="action-link logout-btn" (click)="logout()" title="Déconnexion">⏻</button>
             </div>
           </div>
@@ -34,7 +35,30 @@
         />
         <button type="button" class="btn btn--primary btn--sm" (click)="search()">Chercher</button>
       </div>
-      <button type="button" class="btn btn--ghost btn--sm locate-btn" (click)="locateMe()">📍 Me localiser</button>
+      <div class="search-actions">
+        <button type="button" class="btn btn--ghost btn--sm" (click)="locateMe()">📍 Me localiser</button>
+        <button type="button" class="btn btn--ghost btn--sm" (click)="showFilters = !showFilters">
+          🎛️ Filtres @if (filterVille || filterRayon !== 10000) { <span class="filter-dot"></span> }
+        </button>
+      </div>
+
+      @if (showFilters) {
+        <div class="filters-panel">
+          <div class="filter-group">
+            <label for="f-ville">Ville</label>
+            <input id="f-ville" type="text" [(ngModel)]="filterVille" placeholder="ex: Dakar" (input)="applyFilters()" />
+          </div>
+          <div class="filter-group">
+            <label for="f-rayon">Rayon max</label>
+            <select id="f-rayon" title="Rayon de recherche" [(ngModel)]="filterRayon" (change)="search()">
+              @for (opt of rayonOptions; track opt.value) {
+                <option [value]="opt.value">{{ opt.label }}</option>
+              }
+            </select>
+          </div>
+          <button type="button" class="btn btn--ghost btn--sm" (click)="resetFilters()">Réinitialiser</button>
+        </div>
+      }
     </div>
 
     <div class="panel-left__results">
@@ -45,21 +69,21 @@
         </div>
       } @else if (error) {
         <div class="error-state"><p class="text-danger">{{ error }}</p></div>
-      } @else if (results.length === 0 && searchQuery) {
+      } @else if (filteredResults.length === 0 && searchQuery) {
         <div class="empty-state">
           <span>🔍</span>
           <p>Aucune pharmacie trouvée pour <strong>{{ searchQuery }}</strong></p>
         </div>
-      } @else if (results.length === 0) {
+      } @else if (filteredResults.length === 0) {
         <div class="empty-state">
           <span>💊</span>
           <p class="text-muted">Entrez un médicament pour trouver les pharmacies proches.</p>
         </div>
       } @else {
         <div class="results-count text-muted">
-          {{ results.length }} pharmacie(s) avec <strong class="text-accent">{{ searchQuery }}</strong>
+          {{ filteredResults.length }} pharmacie(s) avec <strong class="text-accent">{{ searchQuery }}</strong>
         </div>
-        @for (p of results; track p.user_id) {
+        @for (p of filteredResults; track p.user_id) {
           <div class="result-card" [class.selected]="selectedResult?.user_id === p.user_id" (click)="selectResult(p)">
             <div class="result-card__header">
               <div>

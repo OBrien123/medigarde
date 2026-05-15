@@ -1,14 +1,13 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
 import { StockService } from '../../core/services/stock.service';
 import { PharmacieService } from '../../core/services/pharmacie.service';
 import { MedicamentService } from '../../core/services/medicament.service';
 import { AuthService } from '../../core/services/auth.service';
-import { Stock, Pharmacie, Medicament } from '../../core/models';
+import { Stock, Pharmacie, Medicament, Horaire } from '../../core/models';
 
-type NavItem = 'dashboard' | 'stocks' | 'profile';
+type NavItem = 'dashboard' | 'stocks' | 'horaires' | 'profile';
 
 @Component({
   selector: 'app-pharmacie-dashboard',
@@ -22,7 +21,6 @@ export class PharmacieDashboardComponent implements OnInit {
   private pharmacieService = inject(PharmacieService);
   private medicamentService = inject(MedicamentService);
   private auth = inject(AuthService);
-  private router = inject(Router);
 
   activeNav: NavItem = 'dashboard';
   pharmacie: Pharmacie | null = null;
@@ -30,10 +28,29 @@ export class PharmacieDashboardComponent implements OnInit {
   medicaments: Medicament[] = [];
   loading = true;
 
-  // Modal ajout/édition
+  // Stock modal
   showModal = false;
   editingStock: Partial<Stock> | null = null;
   saving = false;
+
+  // Profil edit
+  editingProfile: Partial<Pharmacie> | null = null;
+  savingProfile = false;
+  profileSuccess = false;
+
+  // Horaires
+  readonly joursEntries = [
+    { key: 'lundi', label: 'Lundi' },
+    { key: 'mardi', label: 'Mardi' },
+    { key: 'mercredi', label: 'Mercredi' },
+    { key: 'jeudi', label: 'Jeudi' },
+    { key: 'vendredi', label: 'Vendredi' },
+    { key: 'samedi', label: 'Samedi' },
+    { key: 'dimanche', label: 'Dimanche' },
+  ];
+  horaires: Horaire[] = [];
+  savingHoraires = false;
+  horairesSuccess = false;
 
   get user() { return this.auth.user; }
 
@@ -45,10 +62,6 @@ export class PharmacieDashboardComponent implements OnInit {
     return { total, disponibles, faibles, ruptures };
   }
 
-  get filteredStocks(): Stock[] {
-    return this.stocks;
-  }
-
   ngOnInit(): void {
     const userId = this.auth.user?.id;
     if (!userId) { this.loading = false; return; }
@@ -56,6 +69,7 @@ export class PharmacieDashboardComponent implements OnInit {
     this.pharmacieService.maPharmacie(userId).subscribe({
       next: p => {
         this.pharmacie = p;
+        this.initHoraires(p.horaires ?? []);
         this.stockService.byPharmacie(p.user_id).subscribe(r => {
           this.stocks = r.results;
           this.loading = false;
@@ -65,6 +79,62 @@ export class PharmacieDashboardComponent implements OnInit {
     });
   }
 
+  private initHoraires(existing: Horaire[]): void {
+    this.horaires = this.joursEntries.map(j => {
+      const found = existing.find(h => h.jour === j.key);
+      return found ?? { jour: j.key, ouverture: '08:00', fermeture: '18:00', ferme: false };
+    });
+  }
+
+  getHoraire(jour: string): Horaire {
+    return this.horaires.find(h => h.jour === jour)!;
+  }
+
+  saveHoraires(): void {
+    if (!this.pharmacie) return;
+    this.savingHoraires = true;
+    this.pharmacieService.update(this.pharmacie.user_id, { horaires: this.horaires } as any).subscribe({
+      next: updated => {
+        this.pharmacie = updated;
+        this.initHoraires(updated.horaires ?? []);
+        this.savingHoraires = false;
+        this.horairesSuccess = true;
+        setTimeout(() => this.horairesSuccess = false, 3000);
+      },
+      error: () => { this.savingHoraires = false; }
+    });
+  }
+
+  startEditProfile(): void {
+    if (!this.pharmacie) return;
+    this.editingProfile = {
+      nom: this.pharmacie.nom,
+      adresse: this.pharmacie.adresse,
+      ville: this.pharmacie.ville,
+      telephone: this.pharmacie.telephone,
+      email: this.pharmacie.email,
+    };
+    this.profileSuccess = false;
+  }
+
+  cancelEditProfile(): void { this.editingProfile = null; }
+
+  saveProfile(): void {
+    if (!this.editingProfile || !this.pharmacie) return;
+    this.savingProfile = true;
+    this.pharmacieService.update(this.pharmacie.user_id, this.editingProfile).subscribe({
+      next: updated => {
+        this.pharmacie = updated;
+        this.editingProfile = null;
+        this.savingProfile = false;
+        this.profileSuccess = true;
+        setTimeout(() => this.profileSuccess = false, 3000);
+      },
+      error: () => { this.savingProfile = false; }
+    });
+  }
+
+  // ── Stock helpers ──────────────────────────────────────────────────────────
   medicamentNom(med: Medicament): string {
     return `${med.nom_generique} ${med.dosage}${med.nom_commercial ? ' (' + med.nom_commercial + ')' : ''}`;
   }
@@ -95,11 +165,7 @@ export class PharmacieDashboardComponent implements OnInit {
     this.showModal = true;
   }
 
-  openEdit(s: Stock): void {
-    this.editingStock = { ...s };
-    this.showModal = true;
-  }
-
+  openEdit(s: Stock): void { this.editingStock = { ...s }; this.showModal = true; }
   closeModal(): void { this.showModal = false; this.editingStock = null; }
 
   saveStock(): void {
@@ -116,10 +182,7 @@ export class PharmacieDashboardComponent implements OnInit {
       });
     } else {
       this.stockService.create({ ...this.editingStock, pharmacie: this.pharmacie!.user_id }).subscribe({
-        next: created => {
-          this.stocks.unshift(created);
-          this.saving = false; this.closeModal();
-        },
+        next: created => { this.stocks.unshift(created); this.saving = false; this.closeModal(); },
         error: () => { this.saving = false; }
       });
     }

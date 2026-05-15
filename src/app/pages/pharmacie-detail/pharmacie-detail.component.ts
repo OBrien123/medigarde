@@ -31,13 +31,13 @@ export class PharmacieDetailComponent implements OnInit, OnDestroy {
   private map: any;
 
   readonly joursEntries = [
-    { key: 'lun', label: 'Lundi' },
-    { key: 'mar', label: 'Mardi' },
-    { key: 'mer', label: 'Mercredi' },
-    { key: 'jeu', label: 'Jeudi' },
-    { key: 'ven', label: 'Vendredi' },
-    { key: 'sam', label: 'Samedi' },
-    { key: 'dim', label: 'Dimanche' },
+    { key: 'lundi', label: 'Lundi' },
+    { key: 'mardi', label: 'Mardi' },
+    { key: 'mercredi', label: 'Mercredi' },
+    { key: 'jeudi', label: 'Jeudi' },
+    { key: 'vendredi', label: 'Vendredi' },
+    { key: 'samedi', label: 'Samedi' },
+    { key: 'dimanche', label: 'Dimanche' },
   ];
 
   get isLoggedIn(): boolean { return this.auth.isLoggedIn; }

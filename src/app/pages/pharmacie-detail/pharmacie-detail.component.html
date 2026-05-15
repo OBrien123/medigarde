@@ -67,7 +67,7 @@
               <div class="horaire-row">
                 <span class="horaire-jour">{{ jour.label }}</span>
                 @if (getHoraire(jour.key) && !getHoraire(jour.key)!.ferme) {
-                  <span class="horaire-time text-accent">{{ getHoraire(jour.key)!.heure_ouverture }} – {{ getHoraire(jour.key)!.heure_fermeture }}</span>
+                  <span class="horaire-time text-accent">{{ getHoraire(jour.key)!.ouverture }} – {{ getHoraire(jour.key)!.fermeture }}</span>
                 } @else {
                   <span class="horaire-time text-danger">Fermé</span>
                 }
@@ -86,14 +86,14 @@
             } @else {
               <div class="input-group">
                 <label>Rayon de notification (mètres)</label>
-                <select [(ngModel)]="alerteRayon">
+                <select id="rayon-select" title="Rayon de notification" [(ngModel)]="alerteRayon">
                   <option [value]="500">500 m</option>
                   <option [value]="1000">1 km</option>
                   <option [value]="2000">2 km</option>
                   <option [value]="5000">5 km</option>
                 </select>
               </div>
-              <button class="btn btn--primary" (click)="activerAlerte()">Activer l'alerte</button>
+              <button type="button" class="btn btn--primary" (click)="activerAlerte()">Activer l'alerte</button>
             }
           </section>
         }

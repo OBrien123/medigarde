@@ -71,10 +71,10 @@ export interface RechercheResult {
 }
 
 export interface Horaire {
-  id: number;
+  id?: number;
   jour: string;
-  heure_ouverture: string;
-  heure_fermeture: string;
+  ouverture: string | null;
+  fermeture: string | null;
   ferme: boolean;
 }
 

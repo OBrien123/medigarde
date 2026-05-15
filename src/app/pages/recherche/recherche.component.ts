@@ -23,12 +23,25 @@ export class RechercheComponent implements OnInit, OnDestroy {
 
   searchQuery = '';
   results: Pharmacie[] = [];
+  filteredResults: Pharmacie[] = [];
   loading = false;
   error = '';
   selectedResult: Pharmacie | null = null;
   mapReady = false;
   userLat = 14.6937;
   userLng = -17.4441;
+
+  // Filtres
+  showFilters = false;
+  filterVille = '';
+  filterRayon = 10000;
+  readonly rayonOptions = [
+    { label: '1 km', value: 1000 },
+    { label: '3 km', value: 3000 },
+    { label: '5 km', value: 5000 },
+    { label: '10 km', value: 10000 },
+    { label: '20 km', value: 20000 },
+  ];
 
   get user() { return this.auth.user; }
 
@@ -77,6 +90,25 @@ export class RechercheComponent implements OnInit, OnDestroy {
     this.mapReady = true;
   }
 
+  applyFilters(): void {
+    let res = [...this.results];
+    if (this.filterVille.trim()) {
+      const v = this.filterVille.trim().toLowerCase();
+      res = res.filter(p => p.ville?.toLowerCase().includes(v));
+    }
+    if (this.filterRayon) {
+      res = res.filter(p => !p.distance || p.distance <= this.filterRayon);
+    }
+    this.filteredResults = res;
+    this.updateMapMarkers();
+  }
+
+  resetFilters(): void {
+    this.filterVille = '';
+    this.filterRayon = 10000;
+    this.applyFilters();
+  }
+
   search(): void {
     if (!this.searchQuery.trim()) return;
     this.loading = true; this.error = '';
@@ -88,22 +120,24 @@ export class RechercheComponent implements OnInit, OnDestroy {
     this.rechercheService.chercherMedicament(this.searchQuery).subscribe({
       next: medRes => {
         const medId = medRes.results[0]?.id;
-        this.rechercheService.chercherPharmaciesProches(this.userLat, this.userLng, medId).subscribe({
+        this.rechercheService.chercherPharmaciesProches(this.userLat, this.userLng, medId, this.filterRayon).subscribe({
           next: pharmacies => {
             this.results = pharmacies;
+            this.filteredResults = pharmacies;
             this.loading = false;
-            this.updateMapMarkers();
-            if (pharmacies.length > 0) this.selectResult(pharmacies[0]);
+            this.applyFilters();
+            if (this.filteredResults.length > 0) this.selectResult(this.filteredResults[0]);
           },
           error: () => { this.loading = false; this.error = 'Erreur lors de la recherche.'; }
         });
       },
       error: () => {
-        this.rechercheService.chercherPharmaciesProches(this.userLat, this.userLng).subscribe({
+        this.rechercheService.chercherPharmaciesProches(this.userLat, this.userLng, undefined, this.filterRayon).subscribe({
           next: pharmacies => {
             this.results = pharmacies;
+            this.filteredResults = pharmacies;
             this.loading = false;
-            this.updateMapMarkers();
+            this.applyFilters();
           },
           error: () => { this.loading = false; this.error = 'Erreur lors de la recherche.'; }
         });
@@ -123,7 +157,7 @@ export class RechercheComponent implements OnInit, OnDestroy {
     if (!L || !this.map) return;
     this.markers.forEach(m => m.remove());
     this.markers = [];
-    this.results.forEach(p => {
+    this.filteredResults.forEach(p => {
       if (!p.latitude || !p.longitude) return;
       const m = L.circleMarker([+p.latitude, +p.longitude], {
         radius: 10, fillColor: '#00D4A0', color: '#fff', weight: 2, fillOpacity: 1,
