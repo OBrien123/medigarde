@@ -1,3 +1,4 @@
+<!-- Navbar -->
 <nav class="navbar">
   <div class="navbar__brand">
     <span class="brand-icon">💊</span>
@@ -5,76 +6,145 @@
   </div>
   <div class="navbar__actions">
     @if (isLoggedIn) {
-      <button class="btn btn--outline btn--sm" (click)="goToDashboard()">Mon espace</button>
+      <button type="button" class="btn btn--outline btn--sm" (click)="goToDashboard()">Mon espace</button>
     } @else {
-      <button class="btn btn--ghost btn--sm" (click)="goToLogin()">Connexion</button>
-      <button class="btn btn--primary btn--sm" (click)="goToRegister()">S'inscrire</button>
+      <button type="button" class="btn btn--ghost btn--sm" (click)="goToLogin()">Connexion</button>
+      <button type="button" class="btn btn--primary btn--sm" (click)="goToRegister()">S'inscrire</button>
     }
   </div>
 </nav>
 
+<!-- Hero -->
 <section class="hero">
+  <div class="hero__bg-glow"></div>
   <div class="hero__content">
-    <div class="hero__badge">Disponible au Sénégal</div>
+    <div class="hero__badge">
+      <span class="badge-dot"></span>
+      Disponible au Sénégal
+    </div>
+
     <h1 class="hero__title">
       Trouvez vos médicaments<br>
-      <span class="text-accent">en temps réel</span>
+      <span class="hero__title--accent">en temps réel</span>
     </h1>
+
     <p class="hero__subtitle">
-      Localisez instantanément les pharmacies qui disposent du médicament dont vous avez besoin, près de chez vous.
+      Localisez instantanément les pharmacies proches qui disposent du médicament dont vous avez besoin — sans appel, sans déplacement inutile.
     </p>
+
+    <!-- Barre de recherche -->
     <div class="hero__search">
-      <div class="search-bar">
-        <span class="search-bar__icon">🔍</span>
+      <div class="search-hero">
+        <span class="search-hero__icon">🔍</span>
         <input
           type="text"
           [(ngModel)]="searchQuery"
-          placeholder="Nom du médicament (ex: Paracétamol, Amoxicilline…)"
+          placeholder="Nom du médicament…"
           (keyup.enter)="search()"
-          class="search-bar__input"
+          class="search-hero__input"
         />
-        <button class="btn btn--primary" (click)="search()">Rechercher</button>
+        <button type="button" class="btn btn--primary search-hero__btn" (click)="search()">
+          Rechercher
+        </button>
+      </div>
+      <!-- Chips populaires -->
+      <div class="search-chips">
+        <span class="chips-label">Populaires :</span>
+        @for (chip of popularMeds; track chip) {
+          <button type="button" class="chip" (click)="searchChip(chip)">{{ chip }}</button>
+        }
       </div>
     </div>
+
+    <!-- Stats -->
     <div class="hero__stats">
-      <div class="stat">
-        <span class="stat__value text-accent">250+</span>
-        <span class="stat__label">Pharmacies</span>
+      <div class="stat-item">
+        <span class="stat-item__value">250<span class="text-accent">+</span></span>
+        <span class="stat-item__label">Pharmacies</span>
       </div>
-      <div class="stat">
-        <span class="stat__value text-accent">1 200+</span>
-        <span class="stat__label">Médicaments</span>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <span class="stat-item__value">1 200<span class="text-accent">+</span></span>
+        <span class="stat-item__label">Médicaments</span>
       </div>
-      <div class="stat">
-        <span class="stat__value text-accent">Temps réel</span>
-        <span class="stat__label">Disponibilité</span>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <span class="stat-item__value text-accent">Temps réel</span>
+        <span class="stat-item__label">Disponibilité</span>
       </div>
     </div>
   </div>
-  <div class="hero__map" id="landing-map"></div>
+
+  <!-- Carte Leaflet -->
+  <div class="hero__map-wrap">
+    <div class="hero__map" id="landing-map">
+      <div class="map-overlay-label">
+        <span>🗺️</span> Carte interactive
+      </div>
+    </div>
+    <div class="map-pills">
+      <div class="map-pill map-pill--success">🟢 23 pharmacies ouvertes</div>
+      <div class="map-pill">💊 Stock en temps réel</div>
+    </div>
+  </div>
 </section>
 
+<!-- Features -->
+<section class="features">
+  <div class="features__inner">
+    <div class="section-header">
+      <h2 class="section-title">Pourquoi choisir PharmaLoc ?</h2>
+      <p class="section-sub text-muted">Une solution pensée pour les patients et les pharmaciens du Sénégal</p>
+    </div>
+    <div class="features__grid">
+      <div class="feature-card">
+        <div class="feature-card__icon">⚡</div>
+        <h3>Résultats instantanés</h3>
+        <p>Trouvez en quelques secondes quelle pharmacie a votre médicament en stock, sans attendre.</p>
+      </div>
+      <div class="feature-card feature-card--accent">
+        <div class="feature-card__icon">📍</div>
+        <h3>Basé sur votre position</h3>
+        <p>Résultats triés par distance. On vous montre d'abord les pharmacies les plus proches de vous.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-card__icon">🔔</div>
+        <h3>Alertes de disponibilité</h3>
+        <p>Activez une alerte et soyez notifié dès qu'un médicament redevient disponible près de chez vous.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-card__icon">📱</div>
+        <h3>Accessible partout</h3>
+        <p>Fonctionne sur mobile, tablette et ordinateur. Pas d'application à télécharger.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Comment ça marche -->
 <section class="steps">
-  <div class="steps__container">
-    <h2 class="section-title">Comment ça marche ?</h2>
+  <div class="steps__inner">
+    <div class="section-header">
+      <h2 class="section-title">Comment ça marche ?</h2>
+    </div>
     <div class="steps__grid">
       <div class="step">
-        <div class="step__number">1</div>
+        <div class="step__num">01</div>
         <div class="step__icon">🔍</div>
         <h3>Cherchez</h3>
-        <p>Entrez le nom du médicament dont vous avez besoin</p>
+        <p>Tapez le nom du médicament ou de la substance active</p>
       </div>
-      <div class="step__arrow">→</div>
+      <div class="step__connector"></div>
       <div class="step">
-        <div class="step__number">2</div>
+        <div class="step__num">02</div>
         <div class="step__icon">📍</div>
         <h3>Localisez</h3>
-        <p>Voyez les pharmacies à proximité avec le stock disponible</p>
+        <p>Visualisez sur la carte les pharmacies qui l'ont en stock</p>
       </div>
-      <div class="step__arrow">→</div>
+      <div class="step__connector"></div>
       <div class="step">
-        <div class="step__number">3</div>
-        <div class="step__icon">🏃</div>
+        <div class="step__num">03</div>
+        <div class="step__icon">✅</div>
         <h3>Récupérez</h3>
         <p>Rendez-vous directement à la pharmacie la plus proche</p>
       </div>
@@ -82,16 +152,72 @@
   </div>
 </section>
 
-<section class="cta">
-  <div class="cta__card card">
-    <h2>Vous êtes pharmacien ?</h2>
-    <p>Gérez votre stock en ligne et rendez vos médicaments visibles à tous vos patients.</p>
-    <button class="btn btn--primary btn--lg" (click)="goToRegister()">
-      Inscrire ma pharmacie
-    </button>
+<!-- CTA Pharmacien -->
+<section class="pharmacien-cta">
+  <div class="pharmacien-cta__inner">
+    <div class="pharmacien-cta__text">
+      <div class="cta-badge">Pour les professionnels</div>
+      <h2>Vous êtes pharmacien ?</h2>
+      <p>Rejoignez PharmaLoc et rendez votre stock visible à des milliers de patients. Gérez vos médicaments en temps réel depuis un tableau de bord simple et efficace.</p>
+      <ul class="cta-benefits">
+        <li>✅ Gestion des stocks en ligne</li>
+        <li>✅ Visibilité augmentée auprès des patients</li>
+        <li>✅ Alertes automatiques stock faible</li>
+        <li>✅ Inscription gratuite</li>
+      </ul>
+      <button type="button" class="btn btn--primary btn--lg" (click)="goToRegister()">
+        Inscrire ma pharmacie
+      </button>
+    </div>
+    <div class="pharmacien-cta__visual">
+      <div class="dashboard-preview">
+        <div class="preview-bar">
+          <span class="dot dot--red"></span>
+          <span class="dot dot--yellow"></span>
+          <span class="dot dot--green"></span>
+          <span class="preview-title">Dashboard Pharmacien</span>
+        </div>
+        <div class="preview-kpis">
+          <div class="preview-kpi preview-kpi--green">
+            <div class="preview-kpi__val">47</div>
+            <div class="preview-kpi__lbl">En stock</div>
+          </div>
+          <div class="preview-kpi preview-kpi--yellow">
+            <div class="preview-kpi__val">3</div>
+            <div class="preview-kpi__lbl">Stock faible</div>
+          </div>
+          <div class="preview-kpi preview-kpi--red">
+            <div class="preview-kpi__val">1</div>
+            <div class="preview-kpi__lbl">Rupture</div>
+          </div>
+        </div>
+        <div class="preview-rows">
+          @for (row of previewRows; track row.name) {
+            <div class="preview-row">
+              <span class="preview-row__name">{{ row.name }}</span>
+              <div class="preview-row__bar">
+                <div class="preview-row__fill" [style.width]="row.pct + '%'" [class]="'preview-row__fill--' + row.color"></div>
+              </div>
+              <span class="preview-row__qty" [class]="'text-' + row.color">{{ row.qty }}</span>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 
+<!-- Footer -->
 <footer class="footer">
-  <span>© 2025 PharmaLoc – Groupe G7 · ESP Dakar</span>
+  <div class="footer__inner">
+    <div class="footer__brand">
+      <span>💊</span>
+      <span class="brand-name">PharmaLoc</span>
+    </div>
+    <p class="text-muted">© 2025 PharmaLoc — Groupe G7 · ESP Dakar</p>
+    <div class="footer__links">
+      <button type="button" class="link-btn" (click)="goToRegister()">S'inscrire</button>
+      <button type="button" class="link-btn" (click)="goToLogin()">Connexion</button>
+    </div>
+  </div>
 </footer>

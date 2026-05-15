@@ -19,6 +19,15 @@ export class LandingComponent implements OnInit, OnDestroy {
   searchQuery = '';
   private map: any;
 
+  readonly popularMeds = ['Paracétamol', 'Amoxicilline', 'Coartem', 'Ibuprofène', 'Chloroquine'];
+
+  readonly previewRows = [
+    { name: 'Amoxicilline 500mg', qty: 45, pct: 80, color: 'accent' },
+    { name: 'Paracétamol 500mg', qty: 120, pct: 95, color: 'accent' },
+    { name: 'Coartem 80/480mg', qty: 8, pct: 20, color: 'warning' },
+    { name: 'Doliprane 1000mg', qty: 2, pct: 5, color: 'danger' },
+  ];
+
   ngOnInit(): void {
     if (isPlatformBrowser(this.platformId)) {
       setTimeout(() => this.initMap(), 300);
@@ -42,31 +51,42 @@ export class LandingComponent implements OnInit, OnDestroy {
       { lat: 14.6967, lng: -17.4461, nom: 'Pharmacie Centrale' },
       { lat: 14.6900, lng: -17.4400, nom: 'Pharmacie du Plateau' },
       { lat: 14.7010, lng: -17.4510, nom: 'Pharmacie Liberté' },
+      { lat: 14.6850, lng: -17.4380, nom: 'Pharmacie Sacré-Cœur' },
+      { lat: 14.7050, lng: -17.4350, nom: 'Pharmacie Mermoz' },
     ];
     pharmacies.forEach(p => {
       const marker = L.circleMarker([p.lat, p.lng], {
-        radius: 8, fillColor: '#00D4A0', color: '#fff', weight: 2, fillOpacity: 1,
+        radius: 9, fillColor: '#00D4A0', color: '#0A0F1E', weight: 2, fillOpacity: 0.9,
       }).addTo(this.map);
-      marker.bindPopup(`<strong>${p.nom}</strong>`);
+      marker.bindPopup(`<strong>${p.nom}</strong><br><small style="color:#00D4A0">En stock</small>`);
     });
+  }
+
+  searchChip(med: string): void {
+    this.searchQuery = med;
+    this.search();
   }
 
   search(): void {
     if (!this.searchQuery.trim()) return;
-    navigator.geolocation.getCurrentPosition(
-      pos => {
-        this.router.navigate(['/recherche'], {
-          queryParams: {
-            q: this.searchQuery,
-            lat: pos.coords.latitude,
-            lon: pos.coords.longitude,
-          },
-        });
-      },
-      () => {
-        this.router.navigate(['/recherche'], { queryParams: { q: this.searchQuery } });
-      }
-    );
+    if (typeof navigator !== 'undefined' && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          this.router.navigate(['/recherche'], {
+            queryParams: {
+              q: this.searchQuery,
+              lat: pos.coords.latitude,
+              lon: pos.coords.longitude,
+            },
+          });
+        },
+        () => {
+          this.router.navigate(['/recherche'], { queryParams: { q: this.searchQuery } });
+        }
+      );
+    } else {
+      this.router.navigate(['/recherche'], { queryParams: { q: this.searchQuery } });
+    }
   }
 
   goToRegister(): void { this.router.navigate(['/inscription']); }
