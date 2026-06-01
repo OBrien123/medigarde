@@ -3,17 +3,26 @@
   <aside class="sidebar">
     <div class="sidebar__brand">💊 <span>PharmaLoc</span></div>
     <nav class="sidebar__nav">
-      <button class="nav-item" [class.active]="activeNav === 'dashboard'" (click)="activeNav = 'dashboard'">
+      <button type="button" class="nav-item" [class.active]="activeNav === 'dashboard'" (click)="goTo('dashboard')">
         <span>📊</span> Tableau de bord
       </button>
-      <button class="nav-item" [class.active]="activeNav === 'pharmacies'" (click)="activeNav = 'pharmacies'">
+      <button type="button" class="nav-item" [class.active]="activeNav === 'pharmacies'" (click)="goTo('pharmacies')">
         <span>🏥</span> Pharmacies
       </button>
-      <button class="nav-item" [class.active]="activeNav === 'pending'" (click)="activeNav = 'pending'">
+      <button type="button" class="nav-item" [class.active]="activeNav === 'pending'" (click)="goTo('pending')">
         <span>⏳</span> En attente
         @if (stats.enAttente > 0) {
           <span class="badge-count">{{ stats.enAttente }}</span>
         }
+      </button>
+      <button type="button" class="nav-item" [class.active]="activeNav === 'suspendues'" (click)="goTo('suspendues')">
+        <span>🚫</span> Suspendues
+        @if (stats.suspendu > 0) {
+          <span class="badge-count badge-count--danger">{{ stats.suspendu }}</span>
+        }
+      </button>
+      <button type="button" class="nav-item" [class.active]="activeNav === 'medicaments'" (click)="goTo('medicaments')">
+        <span>💊</span> Médicaments
       </button>
     </nav>
     <div class="sidebar__footer">
@@ -24,7 +33,7 @@
           <div class="user-role text-muted">Administrateur</div>
         </div>
       </div>
-      <button class="btn btn--ghost btn--sm" (click)="logout()">Déconnexion</button>
+      <button type="button" class="btn btn--ghost btn--sm" (click)="logout()">Déconnexion</button>
     </div>
   </aside>
 
@@ -32,7 +41,7 @@
   <main class="main-content">
     @if (loading) { <div class="page-center"><div class="spinner"></div></div> }
 
-    <!-- Dashboard -->
+    <!-- ── Tableau de bord ───────────────────────────────────────────── -->
     @if (!loading && activeNav === 'dashboard') {
       <div class="content-section">
         <div class="page-header"><h1>Tableau de bord</h1></div>
@@ -60,7 +69,7 @@
           </div>
         </div>
 
-        <!-- Graphe statut (barres CSS) -->
+        <!-- Graphe barres -->
         <div class="card chart-card">
           <h2>Répartition des pharmacies</h2>
           <div class="chart-bars">
@@ -68,45 +77,48 @@
               <div class="chart-bar-wrap">
                 <div class="chart-bar chart-bar--success" [style.height.%]="stats.total ? (stats.active / stats.total * 100) : 0"></div>
               </div>
-              <span>Actives</span>
-              <strong class="text-accent">{{ stats.active }}</strong>
+              <span>Actives</span><strong class="text-accent">{{ stats.active }}</strong>
             </div>
             <div class="chart-bar-group">
               <div class="chart-bar-wrap">
                 <div class="chart-bar chart-bar--warning" [style.height.%]="stats.total ? (stats.enAttente / stats.total * 100) : 0"></div>
               </div>
-              <span>En attente</span>
-              <strong class="text-warning">{{ stats.enAttente }}</strong>
+              <span>En attente</span><strong class="text-warning">{{ stats.enAttente }}</strong>
             </div>
             <div class="chart-bar-group">
               <div class="chart-bar-wrap">
                 <div class="chart-bar chart-bar--danger" [style.height.%]="stats.total ? (stats.suspendu / stats.total * 100) : 0"></div>
               </div>
-              <span>Suspendues</span>
-              <strong class="text-danger">{{ stats.suspendu }}</strong>
+              <span>Suspendues</span><strong class="text-danger">{{ stats.suspendu }}</strong>
             </div>
           </div>
         </div>
 
-        <!-- Pharmacies en attente -->
+        <!-- Pharmacies en attente rapide -->
         @if (pending.length > 0) {
           <div class="card">
             <div class="table-header">
-              <h2>Pharmacies en attente de validation</h2>
-              <button class="btn btn--outline btn--sm" (click)="activeNav = 'pending'">Voir toutes</button>
+              <h2>⏳ Pharmacies en attente de validation</h2>
+              <button type="button" class="btn btn--outline btn--sm" (click)="goTo('pending')">Voir toutes</button>
             </div>
             <table class="data-table">
               <thead><tr><th>Pharmacie</th><th>Ville</th><th>Email</th><th>Actions</th></tr></thead>
               <tbody>
-                @for (p of pending.slice(0, 5); track p.user_id) {
+                @for (p of pending.slice(0, 4); track p.user_id) {
                   <tr>
                     <td><strong>{{ p.nom }}</strong></td>
                     <td class="text-muted">{{ p.ville }}</td>
                     <td class="text-muted">{{ p.email }}</td>
                     <td>
                       <div class="action-btns">
-                        <button class="btn btn--primary btn--sm" (click)="valider(p)">✓ Valider</button>
-                        <button class="btn btn--danger btn--sm" (click)="suspendre(p)">✕ Rejeter</button>
+                        <button type="button" class="btn btn--primary btn--sm" (click)="valider(p)" [disabled]="isProcessing(p.user_id)">
+                          @if (isProcessing(p.user_id)) { <span class="spinner-sm"></span> } @else { ✓ }
+                          Valider
+                        </button>
+                        <button type="button" class="btn btn--danger btn--sm" (click)="suspendre(p)" [disabled]="isProcessing(p.user_id)">
+                          @if (isProcessing(p.user_id)) { <span class="spinner-sm"></span> } @else { ✕ }
+                          Rejeter
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -118,7 +130,7 @@
       </div>
     }
 
-    <!-- Toutes les pharmacies -->
+    <!-- ── Toutes les pharmacies ─────────────────────────────────────── -->
     @if (!loading && activeNav === 'pharmacies') {
       <div class="content-section">
         <div class="page-header"><h1>Pharmacies</h1></div>
@@ -132,7 +144,7 @@
                 <tr>
                   <td><strong>{{ p.nom }}</strong></td>
                   <td class="text-muted">{{ p.ville }}</td>
-                  <td class="text-muted">{{ p.telephone }}</td>
+                  <td class="text-muted">{{ p.telephone ?? '—' }}</td>
                   <td>
                     <span class="badge {{ p.statut === 'valide' ? 'badge--success' : p.statut === 'en_attente' ? 'badge--warning' : 'badge--danger' }}">
                       {{ p.statut }}
@@ -141,10 +153,26 @@
                   <td>
                     <div class="action-btns">
                       @if (p.statut === 'en_attente') {
-                        <button class="btn btn--primary btn--sm" (click)="valider(p)">✓ Valider</button>
+                        <button type="button" class="btn btn--primary btn--sm" (click)="valider(p)" [disabled]="isProcessing(p.user_id)">
+                          @if (isProcessing(p.user_id)) { <span class="spinner-sm"></span> } @else { ✓ }
+                          Valider
+                        </button>
+                        <button type="button" class="btn btn--danger btn--sm" (click)="suspendre(p)" [disabled]="isProcessing(p.user_id)">
+                          @if (isProcessing(p.user_id)) { <span class="spinner-sm"></span> } @else { ✕ }
+                          Rejeter
+                        </button>
                       }
                       @if (p.statut === 'valide') {
-                        <button class="btn btn--danger btn--sm" (click)="suspendre(p)">Suspendre</button>
+                        <button type="button" class="btn btn--danger btn--sm" (click)="suspendre(p)" [disabled]="isProcessing(p.user_id)">
+                          @if (isProcessing(p.user_id)) { <span class="spinner-sm"></span> } @else { 🚫 }
+                          Suspendre
+                        </button>
+                      }
+                      @if (p.statut === 'suspendu') {
+                        <button type="button" class="btn btn--success btn--sm" (click)="reactiver(p)" [disabled]="isProcessing(p.user_id)">
+                          @if (isProcessing(p.user_id)) { <span class="spinner-sm"></span> } @else { ✅ }
+                          Réactiver
+                        </button>
                       }
                     </div>
                   </td>
@@ -156,7 +184,7 @@
       </div>
     }
 
-    <!-- En attente -->
+    <!-- ── En attente ────────────────────────────────────────────────── -->
     @if (!loading && activeNav === 'pending') {
       <div class="content-section">
         <div class="page-header"><h1>Demandes en attente</h1></div>
@@ -179,8 +207,14 @@
                   @if (p.email)     { <span class="meta-chip">✉️ {{ p.email }}</span> }
                 </div>
                 <div class="pending-card__actions">
-                  <button class="btn btn--primary" (click)="valider(p)">✓ Valider</button>
-                  <button class="btn btn--danger" (click)="suspendre(p)">✕ Rejeter</button>
+                  <button type="button" class="btn btn--primary" (click)="valider(p)" [disabled]="isProcessing(p.user_id)">
+                    @if (isProcessing(p.user_id)) { <span class="spinner-sm"></span> } @else { ✓ }
+                    Valider
+                  </button>
+                  <button type="button" class="btn btn--danger" (click)="suspendre(p)" [disabled]="isProcessing(p.user_id)">
+                    @if (isProcessing(p.user_id)) { <span class="spinner-sm"></span> } @else { ✕ }
+                    Rejeter
+                  </button>
                 </div>
               </div>
             }
@@ -188,5 +222,138 @@
         }
       </div>
     }
+
+    <!-- ── Suspendues ────────────────────────────────────────────────── -->
+    @if (!loading && activeNav === 'suspendues') {
+      <div class="content-section">
+        <div class="page-header"><h1>Pharmacies suspendues</h1></div>
+        @if (suspendues.length === 0) {
+          <div class="empty-state card"><span>✅</span><p>Aucune pharmacie suspendue</p></div>
+        } @else {
+          <div class="pending-grid">
+            @for (p of suspendues; track p.user_id) {
+              <div class="pending-card card">
+                <div class="pending-card__header">
+                  <div class="pharmacie-icon pharmacie-icon--danger">🚫</div>
+                  <div>
+                    <h3>{{ p.nom }}</h3>
+                    <p class="text-muted">{{ p.adresse }}, {{ p.ville }}</p>
+                  </div>
+                  <span class="badge badge--danger">Suspendue</span>
+                </div>
+                <div class="pending-card__info">
+                  @if (p.telephone) { <span class="meta-chip">📞 {{ p.telephone }}</span> }
+                  @if (p.email)     { <span class="meta-chip">✉️ {{ p.email }}</span> }
+                </div>
+                <div class="pending-card__actions">
+                  <button type="button" class="btn btn--success" (click)="reactiver(p)" [disabled]="isProcessing(p.user_id)">
+                    @if (isProcessing(p.user_id)) { <span class="spinner-sm"></span> } @else { ✅ }
+                    Réactiver
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+
+    <!-- ── Médicaments ───────────────────────────────────────────────── -->
+    @if (activeNav === 'medicaments') {
+      <div class="content-section">
+        <div class="page-header">
+          <h1>Catalogue médicaments</h1>
+          <button type="button" class="btn btn--primary" (click)="openAddMed()">+ Ajouter</button>
+        </div>
+
+        @if (loadingMeds) {
+          <div class="page-center"><div class="spinner"></div></div>
+        } @else {
+          <div class="card">
+            <table class="data-table">
+              <thead>
+                <tr><th>Nom générique</th><th>Dosage</th><th>Forme</th><th>Ordonnance</th><th>Actions</th></tr>
+              </thead>
+              <tbody>
+                @for (m of medicaments; track m.id) {
+                  <tr>
+                    <td><strong>{{ m.nom_generique }}</strong></td>
+                    <td class="text-muted">{{ m.dosage }}</td>
+                    <td class="text-muted">{{ m.forme }}</td>
+                    <td>
+                      <span class="badge {{ m.prescription ? 'badge--warning' : 'badge--success' }}">
+                        {{ m.prescription ? 'Ordonnance' : 'Sans ordonnance' }}
+                      </span>
+                    </td>
+                    <td>
+                      <button type="button" class="btn btn--danger btn--sm" (click)="deleteMed(m.id)"
+                        [disabled]="deletingMedId === m.id">
+                        @if (deletingMedId === m.id) { <span class="spinner-sm"></span> } @else { 🗑️ }
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+    }
   </main>
 </div>
+
+<!-- ── Modal ajout médicament ─────────────────────────────────────────── -->
+@if (showAddMed) {
+  <div class="modal-overlay" (click)="cancelAddMed()">
+    <div class="modal-box card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Ajouter un médicament</h2>
+        <button type="button" class="close-btn" (click)="cancelAddMed()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="input-group">
+            <label>Nom générique *</label>
+            <input type="text" [(ngModel)]="newMed['nom_generique']" placeholder="ex: Paracétamol" />
+          </div>
+          <div class="input-group">
+            <label>Dosage *</label>
+            <input type="text" [(ngModel)]="newMed['dosage']" placeholder="ex: 500mg" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="input-group">
+            <label>Forme</label>
+            <select title="Forme galénique" [(ngModel)]="newMed['forme']">
+              <option value="comprime">Comprimé</option>
+              <option value="gelule">Gélule</option>
+              <option value="sirop">Sirop</option>
+              <option value="injectable">Injectable</option>
+              <option value="pommade">Pommade</option>
+              <option value="autre">Autre</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label>Nom commercial</label>
+            <input type="text" [(ngModel)]="newMed['nom_commercial']" placeholder="ex: Doliprane" />
+          </div>
+        </div>
+        <div class="input-group">
+          <label>Fabricant</label>
+          <input type="text" [(ngModel)]="newMed['fabricant']" placeholder="ex: Sanofi" />
+        </div>
+        <label class="checkbox-label">
+          <input type="checkbox" [(ngModel)]="newMed['prescription']" />
+          Nécessite une ordonnance
+        </label>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn--ghost" (click)="cancelAddMed()">Annuler</button>
+        <button type="button" class="btn btn--primary" (click)="saveMed()" [disabled]="savingMed || !newMed['nom_generique'] || !newMed['dosage']">
+          @if (savingMed) { <span class="spinner-sm"></span> }
+          Enregistrer
+        </button>
+      </div>
+    </div>
+  </div>
+}

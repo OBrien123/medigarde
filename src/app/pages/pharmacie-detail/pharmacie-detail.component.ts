@@ -82,6 +82,15 @@ export class PharmacieDetailComponent implements OnInit, OnDestroy {
     return 'available';
   }
 
+  openItineraire(): void {
+    if (!this.pharmacie?.latitude || !this.pharmacie?.longitude) return;
+    const dest = `${this.pharmacie.latitude},${this.pharmacie.longitude}`;
+    navigator.geolocation.getCurrentPosition(
+      pos => window.open(`https://www.google.com/maps/dir/${pos.coords.latitude},${pos.coords.longitude}/${dest}`, '_blank'),
+      ()  => window.open(`https://www.google.com/maps/dir//${dest}`, '_blank')
+    );
+  }
+
   activerAlerte(): void {
     if (!this.pharmacie) return;
     this.notifService.createAlerte({

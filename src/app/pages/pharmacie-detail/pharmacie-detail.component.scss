@@ -58,7 +58,11 @@
 .detail-side { display: flex; flex-direction: column; gap: 20px; }
 
 .map-section {
-  h2 { font-size: 16px; font-weight: 700; margin-bottom: 12px; }
+  &__header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 12px;
+    h2 { font-size: 16px; font-weight: 700; }
+  }
 }
 
 .detail-map { height: 200px; border-radius: var(--radius-md); overflow: hidden; }

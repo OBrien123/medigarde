@@ -14,4 +14,12 @@ export class MedicamentService {
     if (search) p = p.set('search', search);
     return this.http.get<PagedResponse<Medicament>>(`${this.base}/`, { params: p });
   }
+
+  create(data: Partial<Medicament>): Observable<Medicament> {
+    return this.http.post<Medicament>(`${this.base}/`, data);
+  }
+
+  delete(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/${id}/`);
+  }
 }

@@ -12,7 +12,7 @@
       <button type="button" class="nav-item" [class.active]="activeNav === 'horaires'" (click)="activeNav = 'horaires'">
         <span>🕐</span> Horaires
       </button>
-      <button type="button" class="nav-item" [class.active]="activeNav === 'profile'" (click)="activeNav = 'profile'; startEditProfile()">
+      <button type="button" class="nav-item" [class.active]="activeNav === 'profile'" (click)="activeNav = 'profile'">
         <span>⚙️</span> Ma pharmacie
       </button>
     </nav>
@@ -242,7 +242,7 @@
             <div class="profile-row"><span class="text-muted">Adresse</span><strong>{{ pharmacie?.adresse }}</strong></div>
             <div class="profile-row"><span class="text-muted">Ville</span><strong>{{ pharmacie?.ville }}</strong></div>
             <div class="profile-row"><span class="text-muted">Téléphone</span><strong>{{ pharmacie?.telephone ?? '—' }}</strong></div>
-            <div class="profile-row"><span class="text-muted">Email</span><strong>{{ pharmacie?.email }}</strong></div>
+            <div class="profile-row"><span class="text-muted">Email</span><strong>{{ pharmacie?.email ?? '—' }}</strong></div>
             <div class="profile-row">
               <span class="text-muted">Statut</span>
               <span class="badge {{ pharmacie?.statut === 'valide' ? 'badge--success' : 'badge--warning' }}">
@@ -250,6 +250,11 @@
               </span>
             </div>
           </div>
+          @if (pharmacie) {
+            <button type="button" class="btn btn--primary profile-edit-btn" (click)="startEditProfile()">
+              ✏️ Modifier mes informations
+            </button>
+          }
         }
       </div>
     }

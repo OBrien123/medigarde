@@ -55,7 +55,12 @@
       <div class="detail-side">
         <!-- Carte -->
         <section class="card map-section">
-          <h2>Localisation</h2>
+          <div class="map-section__header">
+            <h2>Localisation</h2>
+            <button type="button" class="btn btn--primary btn--sm" (click)="openItineraire()">
+              🗺️ Itinéraire
+            </button>
+          </div>
           <div id="detail-map" class="detail-map"></div>
         </section>
 

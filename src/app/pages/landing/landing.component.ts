@@ -30,8 +30,18 @@ export class LandingComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     if (isPlatformBrowser(this.platformId)) {
-      setTimeout(() => this.initMap(), 300);
+      this.loadLeaflet().then(() => this.initMap());
     }
+  }
+
+  private loadLeaflet(): Promise<void> {
+    return new Promise(resolve => {
+      if ((window as any).L) { resolve(); return; }
+      const script = document.createElement('script');
+      script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+      script.onload = () => resolve();
+      document.head.appendChild(script);
+    });
   }
 
   ngOnDestroy(): void {

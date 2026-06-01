@@ -150,7 +150,9 @@
   &__prix { color: var(--color-text-muted); font-size: 12px; }
 }
 
-.detail-btn { align-self: flex-start; }
+.card-actions {
+  display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+}
 
 .map-panel {
   position: relative;

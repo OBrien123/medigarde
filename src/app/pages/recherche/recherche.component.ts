@@ -184,5 +184,12 @@ export class RechercheComponent implements OnInit, OnDestroy {
     return m < 1000 ? `${Math.round(m)} m` : `${(m / 1000).toFixed(1)} km`;
   }
 
+  openItineraire(p: { latitude?: number; longitude?: number }): void {
+    if (!p.latitude || !p.longitude) return;
+    const dest = `${p.latitude},${p.longitude}`;
+    const origin = `${this.userLat},${this.userLng}`;
+    window.open(`https://www.google.com/maps/dir/${origin}/${dest}`, '_blank');
+  }
+
   logout(): void { this.auth.logout(); }
 }

@@ -161,6 +161,7 @@ export class PharmacieDashboardComponent implements OnInit {
   }
 
   openAdd(): void {
+    if (!this.pharmacie) return;
     this.editingStock = { quantite: 0, prix: 0, seuil_alerte: 10 };
     this.showModal = true;
   }
@@ -169,7 +170,7 @@ export class PharmacieDashboardComponent implements OnInit {
   closeModal(): void { this.showModal = false; this.editingStock = null; }
 
   saveStock(): void {
-    if (!this.editingStock) return;
+    if (!this.editingStock || !this.pharmacie) return;
     this.saving = true;
     if (this.editingStock['id']) {
       this.stockService.update(this.editingStock['id'] as number, this.editingStock).subscribe({

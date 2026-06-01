@@ -38,6 +38,7 @@ export interface Medicament {
   nom_commercial?: string;
   forme: string;
   dosage: string;
+  fabricant?: string;
   prescription: boolean;
   categorie_nom?: string;
 }
