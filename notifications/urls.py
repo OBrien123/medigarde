@@ -3,7 +3,8 @@ from rest_framework.routers import DefaultRouter
 from .views import NotificationViewSet, AlerteViewSet
 
 router = DefaultRouter()
-router.register('', NotificationViewSet, basename='notification')
+# alertes AVANT '' pour éviter que ^{pk}/$ n'intercepte 'alertes/'
 router.register('alertes', AlerteViewSet, basename='alerte')
+router.register('', NotificationViewSet, basename='notification')
 
 urlpatterns = [path('', include(router.urls))]

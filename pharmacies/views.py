@@ -1,4 +1,5 @@
 import math
+from django.db.models import Q
 from rest_framework import viewsets, permissions, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -25,9 +26,14 @@ class PharmacieViewSet(viewsets.ModelViewSet):
     search_fields = ['nom', 'ville', 'adresse']
 
     def get_queryset(self):
-        if self.request.user.is_authenticated and self.request.user.role == 'admin':
-            return Pharmacie.objects.prefetch_related('horaires').all()
-        return Pharmacie.objects.prefetch_related('horaires').filter(statut='valide')
+        user = self.request.user
+        qs = Pharmacie.objects.prefetch_related('horaires', 'stocks')
+        if user.is_authenticated and user.role == 'admin':
+            return qs.all()
+        if user.is_authenticated and user.role == 'pharmacie':
+            # Une pharmacie peut voir sa propre fiche quelle que soit son statut
+            return qs.filter(Q(statut='valide') | Q(pk=user.pk))
+        return qs.filter(statut='valide')
 
     def get_serializer_class(self):
         if self.action == 'list':

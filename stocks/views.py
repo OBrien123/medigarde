@@ -1,4 +1,6 @@
+from django.db import IntegrityError
 from rest_framework import viewsets, permissions, status
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from accounts.permissions import IsPharmacieUser
 from .models import Stock
@@ -18,9 +20,22 @@ class StockViewSet(viewsets.ModelViewSet):
             return StockCreateSerializer
         return StockSerializer
 
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        # Retourner le sérialiseur complet pour avoir medicament_detail et disponible
+        full = StockSerializer(serializer.instance)
+        return Response(full.data, status=status.HTTP_201_CREATED)
+
     def perform_create(self, serializer):
         pharmacie = self.request.user.pharmacie_profile
-        serializer.save(pharmacie=pharmacie)
+        try:
+            serializer.save(pharmacie=pharmacie)
+        except IntegrityError:
+            raise ValidationError(
+                {'medicament': 'Un stock pour ce médicament existe déjà. Utilisez le bouton Modifier (✏️).'}
+            )
 
     def perform_update(self, serializer):
         instance = serializer.save()
